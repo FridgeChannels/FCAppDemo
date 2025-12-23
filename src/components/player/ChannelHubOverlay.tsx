@@ -36,7 +36,7 @@ export const ChannelHubOverlay = ({
         </div>
 
         <ScrollArea className="h-[calc(85vh-20px)]">
-          <div className="px-6 pb-6">
+          <div className="px-6 sm:px-8 pb-8">
             {/* Header */}
             <SheetHeader className="text-left">
               <SheetTitle className="text-2xl font-bold text-card-foreground">
@@ -45,7 +45,7 @@ export const ChannelHubOverlay = ({
             </SheetHeader>
 
             {/* Channel summary */}
-            <div className="flex items-start gap-4 mt-4">
+            <div className="flex items-start gap-5 mt-6">
               <img
                 src={channel.coverImage}
                 alt={channel.name}
@@ -72,7 +72,7 @@ export const ChannelHubOverlay = ({
               </div>
             </div>
 
-            <div className="space-y-3 mt-5">
+            <div className="space-y-4 mt-6">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                 About
               </h3>
@@ -82,10 +82,10 @@ export const ChannelHubOverlay = ({
             </div>
 
             {/* Divider */}
-            <div className="my-6 h-px bg-border/40" />
+            <div className="my-8 h-px bg-border/40" />
 
             {/* Queue */}
-            <div className="flex items-end justify-between gap-3 mb-4">
+            <div className="flex items-end justify-between gap-4 mb-6">
               <div>
                 <h3 className="text-xl font-bold text-card-foreground">Queue</h3>
                 <p className="text-sm text-muted-foreground">
@@ -97,7 +97,7 @@ export const ChannelHubOverlay = ({
               </span>
             </div>
 
-            <div className="space-y-2 pb-8">
+            <div className="space-y-3 pb-10">
               {episodes.map((episode, index) => {
                 const isCurrentEpisode = episode.id === currentEpisodeId;
 
@@ -109,7 +109,7 @@ export const ChannelHubOverlay = ({
                       onClose();
                     }}
                     className={cn(
-                      'w-full flex items-center gap-4 p-3 rounded-xl transition-colors text-left',
+                      'w-full flex items-center gap-5 p-4 rounded-xl transition-colors text-left',
                       isCurrentEpisode ? 'bg-red-500/15' : 'hover:bg-red-500/10'
                     )}
                   >

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
 import { 
   PlayerSurface, 
@@ -8,10 +8,11 @@ import {
 } from '@/components/player';
 import { mockChannel, mockEpisodes } from '@/data/mockData';
 import { Episode } from '@/types/player';
-import { useToast } from '@/hooks/use-toast';
+import { useAiNewsTts } from "@/hooks/useAiNewsTts";
+import { useRecapAudio } from "@/hooks/useRecapAudio";
+import { getDefaultArticleSummary } from "@/lib/articleSummary";
 
 const Index = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -27,10 +28,10 @@ const Index = () => {
   const [isOriginalContentOpen, setIsOriginalContentOpen] = useState(false);
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
 
-  // Simulated time (for demo purposes)
-  const totalDuration = 3 * 60 + 23; // 03:23 in seconds
-  const currentTimeSeconds = (progress / 100) * totalDuration;
-  const remainingSeconds = totalDuration - currentTimeSeconds;
+  // Auto-play "article recap" on refresh (mock); dev team will replace with real summary + audio
+  const ttsEngine = (import.meta.env.VITE_TTS_ENGINE as string | undefined) ?? "webspeech";
+  const useIndexTts2Audio = ttsEngine.toLowerCase() === "indextts2";
+  const fallbackDurationSeconds = 3 * 60;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -38,71 +39,220 @@ const Index = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoPlayOnceRef = useRef(false);
+
+  const recapText = getDefaultArticleSummary();
+
+  const recapAudio = useRecapAudio({
+    src: "/recap.wav",
+    fallbackDurationSeconds,
+    onEnd: () => {
+      // notifications disabled
+    },
+  });
+
+  const { supported: ttsSupported, start: startTts, stop: stopTts } = useAiNewsTts({
+    text: recapText,
+    lang: "zh-CN",
+    durationMs: fallbackDurationSeconds * 1000,
+    onEnd: () => {
+      setIsPlaying(false);
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+        progressTimerRef.current = null;
+      }
+      setProgress(0);
+      // notifications disabled
+    },
+  });
+
+  const effectiveDurationSeconds = useIndexTts2Audio ? recapAudio.durationSeconds : fallbackDurationSeconds;
+  const effectiveCurrentSeconds = useIndexTts2Audio ? recapAudio.currentSeconds : (progress / 100) * effectiveDurationSeconds;
+  const effectiveProgress = useIndexTts2Audio ? recapAudio.progress : progress;
+  const effectiveIsPlaying = useIndexTts2Audio ? recapAudio.isPlaying : isPlaying;
+  const currentTimeSeconds = effectiveCurrentSeconds;
+  const remainingSeconds = effectiveDurationSeconds - effectiveCurrentSeconds;
+
   // Handlers
   const handleTogglePlay = useCallback(() => {
-    setIsPlaying(prev => !prev);
-  }, []);
+    if (useIndexTts2Audio) {
+      if (!recapAudio.supported) {
+        return;
+      }
+      recapAudio.toggle();
+      return;
+    }
+
+    setIsPlaying((prev) => {
+      const next = !prev;
+
+      if (!ttsSupported) {
+        return false;
+      }
+
+      // Start / stop TTS
+      if (next) {
+        startTts();
+
+        if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+        progressTimerRef.current = setInterval(() => {
+          setProgress((p) => {
+            const nextP = p + (100 / totalDuration); // ~1s tick
+            if (nextP >= 100) return 100;
+            return nextP;
+          });
+        }, 1000);
+      } else {
+        stopTts();
+        if (progressTimerRef.current) {
+          clearInterval(progressTimerRef.current);
+          progressTimerRef.current = null;
+        }
+      }
+
+      return next;
+    });
+  }, [recapAudio, startTts, stopTts, ttsSupported, useIndexTts2Audio]);
+
+  // Auto-play on refresh (best-effort; may be blocked by browser until user gesture)
+  useEffect(() => {
+    if (autoPlayOnceRef.current) return;
+    autoPlayOnceRef.current = true;
+
+    if (useIndexTts2Audio) {
+      if (!recapAudio.supported) return;
+      recapAudio.play();
+      return;
+    }
+
+    if (!ttsSupported) return;
+    // Try to start immediately
+    setIsPlaying(true);
+    startTts();
+
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+    progressTimerRef.current = setInterval(() => {
+      setProgress((p) => {
+        const nextP = p + (100 / fallbackDurationSeconds);
+        if (nextP >= 100) return 100;
+        return nextP;
+      });
+    }, 1000);
+  }, [fallbackDurationSeconds, recapAudio, startTts, ttsSupported, useIndexTts2Audio]);
 
   const handleSeek = useCallback((newProgress: number) => {
+    if (useIndexTts2Audio) {
+      recapAudio.seekSeconds((newProgress / 100) * effectiveDurationSeconds);
+      return;
+    }
     setProgress(newProgress);
-  }, []);
+  }, [effectiveDurationSeconds, recapAudio, useIndexTts2Audio]);
 
   const handleVolumeChange = useCallback((newVolume: number) => {
     setVolume(newVolume);
+    if (useIndexTts2Audio) recapAudio.setVolume(newVolume);
   }, []);
 
   const handleSkipBack = useCallback(() => {
-    const newProgress = Math.max(0, progress - (15 / totalDuration) * 100);
+    if (useIndexTts2Audio) {
+      recapAudio.seekSeconds(recapAudio.currentSeconds - 15);
+      return;
+    }
+    const newProgress = Math.max(0, progress - (15 / fallbackDurationSeconds) * 100);
     setProgress(newProgress);
-  }, [progress, totalDuration]);
+  }, [fallbackDurationSeconds, progress, recapAudio, useIndexTts2Audio]);
 
   const handleSkipForward = useCallback(() => {
-    const newProgress = Math.min(100, progress + (30 / totalDuration) * 100);
+    if (useIndexTts2Audio) {
+      recapAudio.seekSeconds(recapAudio.currentSeconds + 15);
+      return;
+    }
+    const newProgress = Math.min(100, progress + (15 / fallbackDurationSeconds) * 100);
     setProgress(newProgress);
-  }, [progress, totalDuration]);
+  }, [fallbackDurationSeconds, progress, recapAudio, useIndexTts2Audio]);
+
+  useEffect(() => {
+    return () => {
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+        progressTimerRef.current = null;
+      }
+      stopTts();
+    };
+  }, [stopTts]);
 
   // Click "Subscribe" button - open subscription page
   const handleOpenSubscription = useCallback(() => {
     setIsSubscriptionOpen(true);
   }, []);
 
-  // Optional entry-point from other pages (e.g. Channel page) to open subscription flow.
+  // Optional entry-points from other pages (e.g. Channel page).
   useEffect(() => {
-    const state = location.state as { openSubscription?: boolean } | null;
-    if (!state?.openSubscription) return;
+    const state = (location.state ?? null) as
+      | {
+          openSubscription?: boolean;
+          playEpisodeId?: string;
+          channel?: typeof channel;
+          episodes?: Episode[];
+        }
+      | null;
+    if (!state) return;
 
-    setIsSubscriptionOpen(true);
-    // Clear navigation state so refresh/back doesn't repeatedly re-open.
+    if (state.openSubscription) {
+      setIsSubscriptionOpen(true);
+    }
+
+    if (state.playEpisodeId) {
+      const list = state.episodes ?? mockEpisodes;
+      const nextEpisode = list.find((e) => e.id === state.playEpisodeId) ?? null;
+      if (nextEpisode) {
+        setCurrentEpisode(nextEpisode);
+        setProgress(nextEpisode.progress || 0);
+      }
+      if (state.channel) setChannel(state.channel);
+      // Don’t auto-start TTS when coming from an episode selection
+      setIsPlaying(false);
+      stopTts();
+    }
+
+    // Clear navigation state so refresh/back doesn't repeatedly re-trigger.
     navigate(".", { replace: true, state: null });
   }, [location.state, navigate]);
 
-  // Confirm subscription - automatically jump to original content page after successful subscription
-  const handleConfirmSubscription = useCallback((plan: 'annual' | 'monthly' | 'free') => {
-    if (plan === 'free') {
-      toast({
-        title: 'Free plan selected',
-        description: 'You can upgrade to a paid subscription anytime',
-      });
-      setIsSubscriptionOpen(false);
-    } else {
-      setChannel(prev => ({ ...prev, isSubscribed: true }));
-      toast({
-        title: 'Subscription successful!',
-        description: `You have successfully subscribed to ${channel.name}, redirecting to original content...`,
-      });
-      setIsSubscriptionOpen(false);
-      setIsChannelHubOpen(false);
-      // Automatically open original content page after successful subscription
-      setTimeout(() => {
-        setIsOriginalContentOpen(true);
-      }, 500);
+  const openOriginalUrl = useCallback(() => {
+    // Open the original URL directly (same behavior as the ExternalLink button).
+    const url = currentEpisode.originalUrl;
+    if (typeof window !== "undefined" && url) {
+      const opened = window.open(url, "_blank", "noopener,noreferrer");
+      // If popup is blocked, fall back to same-tab navigation.
+      if (!opened) window.location.assign(url);
+      return;
     }
-  }, [channel.name, toast]);
+
+    // Fallback (should be rare): show the in-app full issue view.
+    setIsOriginalContentOpen(true);
+  }, [currentEpisode.originalUrl]);
 
   const handleViewOriginal = useCallback(() => {
-    // Open original content in current page, instead of redirecting to external link
-    setIsOriginalContentOpen(true);
-  }, []);
+    openOriginalUrl();
+  }, [openOriginalUrl]);
+
+  // Confirm subscription - after successful subscription, auto-open the external original URL
+  const handleConfirmSubscription = useCallback((plan: 'annual' | 'monthly' | 'free') => {
+    if (plan === 'free') {
+      setIsSubscriptionOpen(false);
+      return;
+    }
+
+    setChannel(prev => ({ ...prev, isSubscribed: true }));
+    setIsSubscriptionOpen(false);
+    setIsChannelHubOpen(false);
+
+    setTimeout(() => {
+      openOriginalUrl();
+    }, 500);
+  }, [openOriginalUrl]);
 
   const handleSelectEpisode = useCallback((episode: Episode) => {
     setCurrentEpisode(episode);
@@ -113,6 +263,9 @@ const Index = () => {
   // Jump to next episode - seamless transition, same interface
   const handleNextEpisode = useCallback(() => {
     const currentIndex = mockEpisodes.findIndex(ep => ep.id === currentEpisode.id);
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro1',hypothesisId:'H1',location:'src/pages/Index.tsx:handleNextEpisode',message:'handleNextEpisode',data:{currentEpisodeId:currentEpisode.id,currentIndex,episodesLen:mockEpisodes.length,nextId:mockEpisodes[currentIndex+1]?.id ?? null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion agent log
     if (currentIndex < mockEpisodes.length - 1) {
       const nextEpisode = mockEpisodes[currentIndex + 1];
       // Switch episode seamlessly, keep current playing state
@@ -125,6 +278,9 @@ const Index = () => {
   // Jump to previous episode - seamless transition, same interface
   const handlePreviousEpisode = useCallback(() => {
     const currentIndex = mockEpisodes.findIndex(ep => ep.id === currentEpisode.id);
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro1',hypothesisId:'H1',location:'src/pages/Index.tsx:handlePreviousEpisode',message:'handlePreviousEpisode',data:{currentEpisodeId:currentEpisode.id,currentIndex,episodesLen:mockEpisodes.length,prevId:mockEpisodes[currentIndex-1]?.id ?? null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion agent log
     if (currentIndex > 0) {
       const previousEpisode = mockEpisodes[currentIndex - 1];
       // Switch episode seamlessly, keep current playing state
@@ -136,14 +292,18 @@ const Index = () => {
 
   return (
     <>
+      {useIndexTts2Audio && (
+        <audio ref={recapAudio.audioRef} src="/recap.wav" preload="auto" />
+      )}
       <PlayerSurface
         episode={currentEpisode}
         channel={channel}
-        isPlaying={isPlaying}
-        progress={progress}
+        isPlaying={effectiveIsPlaying}
+        progress={effectiveProgress}
         currentTime={formatTime(currentTimeSeconds)}
-        duration={formatTime(totalDuration)}
+        duration={formatTime(effectiveDurationSeconds)}
         volume={volume}
+        onBack={() => navigate(-1)}
         onTogglePlay={handleTogglePlay}
         onSeek={handleSeek}
         onVolumeChange={handleVolumeChange}
@@ -169,7 +329,6 @@ const Index = () => {
         onSelectEpisode={handleSelectEpisode}
       />
 
-      {/* Original Content View */}
       <OriginalContentView
         episode={currentEpisode}
         channel={channel}
@@ -177,7 +336,6 @@ const Index = () => {
         onClose={() => setIsOriginalContentOpen(false)}
       />
 
-      {/* Subscription Page */}
       <SubscriptionOverlay
         channel={channel}
         isOpen={isSubscriptionOpen}

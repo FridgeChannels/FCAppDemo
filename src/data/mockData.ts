@@ -1,5 +1,7 @@
 import { Episode, Channel } from '@/types/player';
 import lennysCover from '@/assets/lennys-newsletter-cover.jpg';
+// Using mockData; dev team will replace with real article fetch -> HTML pipeline.
+import lennyOriginalContentHtml from "@/data/lennyOriginalContent.html?raw";
 
 export const mockChannel: Channel = {
   id: 'channel-1',
@@ -32,7 +34,8 @@ export const mockEpisodes: Episode[] = [
     publishedAtRelative: '6 days ago',
     coverImage: '/episode2.png',
     aiSummary: 'An intro to growth loops: how to design, measure, and iterate loops that turn user activity into new acquisition—without relying on endless paid spend.',
-    originalUrl: 'https://example.com/lennys/ep-02',
+    originalUrl: 'https://www.lennysnewsletter.com/p/a-builders-guide-to-living-a-long',
+    originalContent: lennyOriginalContentHtml,
     progress: 12,
   },
   {

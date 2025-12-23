@@ -25,27 +25,23 @@ export const VolumeControl = ({
     onVolumeChange(isMuted ? 1 : 0);
   };
 
-  const controlColor = 'hsl(40, 30%, 30%)';
-
   return (
     <div className={cn('flex items-center gap-3', className)}>
       <button onClick={toggleMute} className="transition-opacity hover:opacity-70">
         {isMuted ? (
-          <VolumeX size={20} style={{ color: controlColor }} />
+          <VolumeX size={20} className="text-neutral-800" />
         ) : (
-          <Volume2 size={20} style={{ color: controlColor }} />
+          <Volume2 size={20} className="text-neutral-800" />
         )}
       </button>
       <div
-        className="relative w-full h-1 rounded-full cursor-pointer"
-        style={{ backgroundColor: 'hsla(40, 50%, 30%, 0.3)' }}
+        className="relative w-full h-1 rounded-full cursor-pointer bg-neutral-300"
         onClick={handleClick}
       >
         <div
-          className="absolute inset-y-0 left-0 rounded-full"
+          className="absolute inset-y-0 left-0 rounded-full bg-neutral-800"
           style={{
             width: `${volume * 100}%`,
-            backgroundColor: 'hsl(40, 30%, 35%)',
           }}
         />
       </div>

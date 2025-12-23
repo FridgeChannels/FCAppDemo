@@ -32,30 +32,27 @@ export const ProgressBar = ({
   return (
     <div className={cn('w-full', className)}>
       <div
-        className="relative h-1.5 rounded-full cursor-pointer group"
-        style={{ backgroundColor: 'hsla(40, 50%, 30%, 0.4)' }}
+        className="relative h-1.5 rounded-full cursor-pointer group bg-neutral-300"
         onClick={handleClick}
         onMouseMove={handleDrag}
       >
         {/* Progress fill */}
         <div
-          className="absolute inset-y-0 left-0 rounded-full transition-all duration-100"
+          className="absolute inset-y-0 left-0 rounded-full bg-neutral-800 transition-all duration-100"
           style={{
             width: `${progress}%`,
-            backgroundColor: 'hsl(40, 20%, 95%)',
           }}
         />
         {/* Drag handle */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
           style={{
             left: `calc(${progress}% - 8px)`,
-            backgroundColor: 'hsl(40, 20%, 95%)',
           }}
         />
       </div>
       {!hideTime && (
-        <div className="flex justify-between mt-2 text-sm" style={{ color: 'hsl(40, 30%, 30%)' }}>
+        <div className="flex justify-between mt-2 text-sm text-neutral-700">
           <span>{currentTime}</span>
           <span>{duration}</span>
         </div>

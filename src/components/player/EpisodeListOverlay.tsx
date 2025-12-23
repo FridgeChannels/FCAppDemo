@@ -33,7 +33,7 @@ export const EpisodeListOverlay = ({
         </div>
 
         {/* Header */}
-        <div className="px-6 pb-4">
+        <div className="px-6 sm:px-8 pb-6">
           <SheetHeader className="text-left">
             <SheetTitle className="text-2xl font-bold text-card-foreground">
               Queue
@@ -46,7 +46,7 @@ export const EpisodeListOverlay = ({
 
         {/* Episode List */}
         <ScrollArea className="flex-1 h-[calc(85vh-100px)] episode-list">
-          <div className="px-4 pb-8">
+          <div className="px-5 sm:px-6 pb-10">
             {episodes.map((episode, index) => {
               const isCurrentEpisode = episode.id === currentEpisodeId;
               
@@ -58,7 +58,7 @@ export const EpisodeListOverlay = ({
                     onClose();
                   }}
                   className={cn(
-                    'w-full flex items-center gap-4 p-3 rounded-xl transition-colors text-left',
+                    'w-full flex items-center gap-5 p-4 rounded-xl transition-colors text-left',
                     isCurrentEpisode 
                       ? 'bg-red-500/15' 
                       : 'hover:bg-red-500/10'

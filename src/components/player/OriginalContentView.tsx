@@ -1,4 +1,4 @@
-import { X, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { Episode, Channel } from '@/types/player';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -22,7 +22,7 @@ export const OriginalContentView = ({
     <div className="fixed inset-0 z-50 bg-card animate-fade-in">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-card border-b border-border/50 safe-area-top">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4">
           <button
             onClick={onClose}
             className="flex items-center text-card-foreground hover:opacity-70 transition-opacity"
@@ -33,20 +33,29 @@ export const OriginalContentView = ({
           <div className="flex-1 text-center">
             <span className="text-sm text-muted-foreground">{channel.name}</span>
           </div>
-          <div className="w-16" /> {/* Spacer for balance */}
+          <a
+            href={episode.originalUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+            aria-label="Open original article in a new tab"
+          >
+            <span className="hidden sm:inline">Open</span>
+            <ExternalLink size={16} />
+          </a>
         </div>
       </div>
 
       {/* Content */}
       <ScrollArea className="h-[calc(100vh-60px)]">
-        <article className="px-6 py-8 max-w-2xl mx-auto">
+        <article className="w-full px-4 sm:px-6 lg:px-8 py-10">
           {/* Episode Header */}
-          <header className="mb-8">
-            <p className="text-sm text-muted-foreground mb-2">{episode.publishedAt}</p>
+          <header className="mb-10">
+            <p className="text-sm text-muted-foreground mb-3">{episode.publishedAt}</p>
             <h1 className="text-2xl font-bold text-card-foreground leading-tight mb-4">
               {episode.title}
             </h1>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <img
                 src={channel.coverImage}
                 alt={channel.name}
@@ -63,7 +72,7 @@ export const OriginalContentView = ({
           <div className="prose prose-invert prose-sm max-w-none">
             {episode.originalContent ? (
               <div 
-                className="text-card-foreground leading-relaxed space-y-4"
+                className="text-card-foreground leading-relaxed space-y-5"
                 dangerouslySetInnerHTML={{ __html: episode.originalContent }}
               />
             ) : (

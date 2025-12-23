@@ -17,6 +17,7 @@ export default {
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         display: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        "brand-serif": ['Cormorant Garamond', 'Georgia', 'Times New Roman', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -88,11 +89,15 @@ export default {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-        xl: "calc(var(--radius) + 4px)",
-        "2xl": "calc(var(--radius) + 8px)",
+        none: "5px",
+        sm: "5px",
+        DEFAULT: "5px",
+        md: "5px",
+        lg: "5px",
+        xl: "5px",
+        "2xl": "5px",
+        "3xl": "5px",
+        full: "5px",
       },
       keyframes: {
         "accordion-down": {

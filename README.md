@@ -60,6 +60,43 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## IndexTTS2 (optional) – higher-quality TTS recap audio
+
+The app can play a local static recap audio file at `public/recap.wav` (auto-play on refresh when enabled).
+
+- **Generator**: [IndexTTS2](https://indextts2.org/)
+- **Script**: `scripts/generate_indextts2_audio.py`
+- **Recap text source**: `src/data/recapText.zh-CN.txt`
+
+### Generate `public/recap.wav` (local)
+
+1) Install IndexTTS:
+
+```bash
+pip install indextts
+```
+
+2) Prepare IndexTTS checkpoints/config and a reference voice wav file (see IndexTTS2 docs).
+
+3) Run:
+
+```bash
+python3 scripts/generate_indextts2_audio.py \
+  --voice /path/to/reference_voice.wav \
+  --model-dir /path/to/checkpoints \
+  --cfg-path /path/to/checkpoints/config.yaml \
+  --text-file src/data/recapText.zh-CN.txt \
+  --out public/recap.wav
+```
+
+### Use IndexTTS2 audio in the app
+
+Set env var and restart dev server:
+
+```bash
+VITE_TTS_ENGINE=indextts2 npm run dev
+```
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.

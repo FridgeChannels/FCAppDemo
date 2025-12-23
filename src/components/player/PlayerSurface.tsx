@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
+import { ChevronLeft } from 'lucide-react';
 import { Episode, Channel } from '@/types/player';
 import { PlayButton } from './PlayButton';
 import { PlaybackControls } from './PlaybackControls';
 import { ProgressBar } from './ProgressBar';
 import { ActionButton } from './ActionButton';
+import { ScrollingText } from './ScrollingText';
 
 interface PlayerSurfaceProps {
   episode: Episode;
@@ -18,6 +20,7 @@ interface PlayerSurfaceProps {
   onVolumeChange: (volume: number) => void;
   onSkipBack: () => void;
   onSkipForward: () => void;
+  onBack?: () => void;
   onOpenChannelInfo: () => void;
   onOpenEpisodeList: () => void;
   onSubscribe: () => void;
@@ -39,6 +42,7 @@ export const PlayerSurface = ({
   onVolumeChange,
   onSkipBack,
   onSkipForward,
+  onBack,
   onOpenChannelInfo,
   onOpenEpisodeList,
   onSubscribe,
@@ -50,11 +54,30 @@ export const PlayerSurface = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [displayEpisode, setDisplayEpisode] = useState(episode);
   const prevEpisodeId = useRef<string>(episode.id);
+  const isAnimatingRef = useRef(false);
+  const DEBUG_VERIFY_RUN_ID = 'verify_fix_1';
   const touchStartY = useRef<number | null>(null);
   const touchEndY = useRef<number | null>(null);
   const wheelDeltaY = useRef<number>(0);
   const wheelTimeout = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    isAnimatingRef.current = isAnimating;
+  }, [isAnimating]);
+
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:DEBUG_VERIFY_RUN_ID,hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:mount',message:'verify_mount_guard_enabled',data:{episodeId:episode.id},timestamp:Date.now()})}).catch(()=>{});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // #endregion agent log
+
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro2',hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:stateSnapshot',message:'state_snapshot',data:{episodeId:episode.id,displayEpisodeId:displayEpisode.id,prevEpisodeId:prevEpisodeId.current,isAnimating,slideDirection},timestamp:Date.now()})}).catch(()=>{});
+  }, [displayEpisode.id, episode.id, isAnimating, slideDirection]);
+  // #endregion agent log
 
   // Swipe up gesture detection (touch and trackpad)
   useEffect(() => {
@@ -64,6 +87,9 @@ export const PlayerSurface = ({
     // Touch events (mobile devices)
     const handleTouchStart = (e: TouchEvent) => {
       touchStartY.current = e.touches[0].clientY;
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro1',hypothesisId:'H2',location:'src/components/player/PlayerSurface.tsx:touchstart',message:'touchstart',data:{y:touchStartY.current},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion agent log
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -73,14 +99,34 @@ export const PlayerSurface = ({
     const handleTouchEnd = () => {
       if (touchStartY.current !== null && touchEndY.current !== null) {
         const deltaY = touchStartY.current - touchEndY.current;
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro1',hypothesisId:'H2',location:'src/components/player/PlayerSurface.tsx:touchend',message:'touchend',data:{deltaY,startY:touchStartY.current,endY:touchEndY.current},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion agent log
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:DEBUG_VERIFY_RUN_ID,hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:touchend',message:'verify_swipe_attempt',data:{deltaY,isAnimating:isAnimatingRef.current},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion agent log
+        if (isAnimatingRef.current) {
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'postfix1',hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:touchend',message:'ignored_swipe_while_animating',data:{deltaY},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion agent log
+          touchStartY.current = null;
+          touchEndY.current = null;
+          return;
+        }
         // Swipe up: start Y is greater than end Y, and swipe distance exceeds 50px
         if (deltaY > 50) {
           setSlideDirection('up');
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro1',hypothesisId:'H2',location:'src/components/player/PlayerSurface.tsx:touchend',message:'swipe_up->onNextEpisode',data:{deltaY},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion agent log
           onNextEpisode();
         }
         // Swipe down: start Y is less than end Y, and swipe distance exceeds 50px
         else if (deltaY < -50) {
           setSlideDirection('down');
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro1',hypothesisId:'H2',location:'src/components/player/PlayerSurface.tsx:touchend',message:'swipe_down->onPreviousEpisode',data:{deltaY},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion agent log
           onPreviousEpisode();
         }
       }
@@ -92,6 +138,16 @@ export const PlayerSurface = ({
     const handleWheel = (e: WheelEvent) => {
       // deltaY < 0 means scrolling up (swipe up)
       if (e.deltaY < 0) {
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:DEBUG_VERIFY_RUN_ID,hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:wheel',message:'verify_wheel_attempt',data:{deltaY:e.deltaY,isAnimating:isAnimatingRef.current},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion agent log
+        if (isAnimatingRef.current) {
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'postfix1',hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:wheel',message:'ignored_wheel_while_animating',data:{deltaY:e.deltaY},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion agent log
+          wheelDeltaY.current = 0;
+          return;
+        }
         wheelDeltaY.current += Math.abs(e.deltaY);
         
         // Clear previous timer
@@ -113,6 +169,16 @@ export const PlayerSurface = ({
       }
       // deltaY > 0 means scrolling down (swipe down)
       else if (e.deltaY > 0) {
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:DEBUG_VERIFY_RUN_ID,hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:wheel',message:'verify_wheel_attempt',data:{deltaY:e.deltaY,isAnimating:isAnimatingRef.current},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion agent log
+        if (isAnimatingRef.current) {
+          // #region agent log
+          fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'postfix1',hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:wheel',message:'ignored_wheel_while_animating',data:{deltaY:e.deltaY},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion agent log
+          wheelDeltaY.current = 0;
+          return;
+        }
         wheelDeltaY.current += e.deltaY;
         
         // Clear previous timer
@@ -153,24 +219,42 @@ export const PlayerSurface = ({
   // Handle slide animation when episode changes
   useEffect(() => {
     if (episode.id !== prevEpisodeId.current) {
-      // Direction is driven by the user's gesture (set before calling onNextEpisode/onPreviousEpisode).
-      // Fallback to 'up' if direction is not set (e.g. episode selected from list).
-      if (!slideDirection) setSlideDirection('up');
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro1',hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:episodeEffect',message:'episode_changed',data:{prevEpisodeId:prevEpisodeId.current,nextEpisodeId:episode.id,slideDirection,isAnimating},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion agent log
+      // Only animate when direction is driven by a gesture (set before calling onNextEpisode/onPreviousEpisode).
+      // For programmatic episode changes (e.g. clicking an episode card in Channel page), switch instantly.
+      if (!slideDirection) {
+        setIsAnimating(false);
+        setDisplayEpisode(episode);
+        prevEpisodeId.current = episode.id;
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro1',hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:episodeEffect',message:'no_slideDirection_instant_switch',data:{episodeId:episode.id},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion agent log
+        return;
+      }
+
       setIsAnimating(true);
-      
+
       // Update displayed episode after a brief delay to trigger animation
       const animationTimer = setTimeout(() => {
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro2',hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:animationTimer',message:'animationTimer_fired_setDisplayEpisode',data:{episodeId:episode.id,displayEpisodeIdBefore:displayEpisode.id,slideDirection,isAnimating},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion agent log
         setDisplayEpisode(episode);
       }, 50); // Small delay to ensure animation starts
-      
+
       // Reset animation state after transition completes
       const resetTimer = setTimeout(() => {
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro2',hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:resetTimer',message:'resetTimer_fired',data:{episodeId:episode.id,displayEpisodeId:displayEpisode.id,slideDirection,isAnimating},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion agent log
         setIsAnimating(false);
         setSlideDirection(null);
       }, 450); // Slightly longer than transition duration
-      
+
       prevEpisodeId.current = episode.id;
-      
+
       return () => {
         clearTimeout(animationTimer);
         clearTimeout(resetTimer);
@@ -213,17 +297,30 @@ export const PlayerSurface = ({
     }
   };
 
+  const backButton = (
+    <button
+      type="button"
+      onClick={onBack}
+      disabled={!onBack}
+      aria-label="Back"
+      className="absolute left-4 top-[calc(env(safe-area-inset-top,20px)+12px)] z-20 inline-flex h-10 w-10 items-center justify-center rounded-full text-black/80 transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+    >
+      <ChevronLeft className="h-5 w-5" />
+    </button>
+  );
+
   // Render content for an episode
   const renderContent = (ep: Episode, transform: string, isCurrent: boolean) => (
     <div
       key={ep.id}
-      className="absolute inset-0 min-h-screen bg-white flex flex-col safe-area-top safe-area-bottom"
+      className="absolute inset-0 h-full w-full bg-background flex flex-col safe-area-top safe-area-bottom"
       style={{
         transform,
         transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)',
         zIndex: isCurrent ? 2 : 1,
       }}
     >
+      {backButton}
       {/* Top drag indicator */}
       <div className="flex justify-center pt-3 pb-2">
         <div 
@@ -233,16 +330,16 @@ export const PlayerSurface = ({
       </div>
 
       {/* Cover Image Area */}
-      <div className="flex items-center justify-center px-12 py-8">
-        <div className="relative" style={{ width: '450px', height: '225px' }}>
+      <div className="flex items-center justify-center px-0 py-8 sm:py-10">
+        <div className="relative w-full max-w-[520px] aspect-[2/1]">
           <img
             src={ep.coverImage ?? channel.coverImage}
             alt={channel.name}
-            className="w-full h-full object-cover rounded-2xl shadow-player-card"
+            className="w-full h-full object-cover rounded-none shadow-player-card"
           />
           {/* Subtle overlay for depth */}
           <div 
-            className="absolute inset-0 rounded-2xl"
+            className="absolute right-0 bottom-0 h-full w-full rounded-none"
             style={{ 
               background: 'linear-gradient(180deg, transparent 60%, hsla(0, 75%, 45%, 0.22) 100%)' 
             }}
@@ -251,13 +348,13 @@ export const PlayerSurface = ({
       </div>
 
       {/* Content Info Area */}
-      <div className="px-6 space-y-4">
+      <div className="px-6 sm:px-8 space-y-5">
         {/* Title */}
         <h1 
-          className="text-xl font-bold leading-tight line-clamp-2"
+          className="text-xl font-bold leading-tight"
           style={{ color: 'hsl(40, 15%, 15%)' }}
         >
-          {ep.title}
+          <ScrollingText text={ep.title} />
         </h1>
 
         {/* Channel & Date */}
@@ -265,15 +362,13 @@ export const PlayerSurface = ({
           <button
             type="button"
             onClick={onOpenChannelInfo}
-            className="text-base font-medium text-left transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
-            style={{ color: 'rgb(134, 104, 45)' }}
+            className="text-base font-medium text-left text-neutral-800 transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
             aria-label="View channel info"
           >
             {channel.name}
           </button>
           <p 
-            className="text-sm font-medium"
-            style={{ color: 'rgb(107, 87, 46)' }}
+            className="text-sm font-medium text-neutral-700"
           >
             {ep.publishedAt}
           </p>
@@ -288,7 +383,7 @@ export const PlayerSurface = ({
               onSeek={isCurrent ? onSeek : () => {}}
               hideTime={true}
             />
-            <div className="flex items-center justify-between mt-2 text-sm" style={{ color: 'hsl(40, 30%, 30%)' }}>
+            <div className="flex items-center justify-between mt-3 text-sm text-neutral-700">
               <span>{isCurrent ? currentTime : '0:00'}</span>
               <span>{isCurrent ? duration : '0:00'}</span>
             </div>
@@ -298,36 +393,25 @@ export const PlayerSurface = ({
       </div>
 
       {/* Playback Controls */}
-      <div className="px-6 py-4 relative">
+      <div className="px-6 sm:px-8 py-5 relative">
         <PlaybackControls
           onSkipBack={onSkipBack}
           onSkipForward={onSkipForward}
         />
         {/* Centered Play Button */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <PlayButton isPlaying={isCurrent ? isPlaying : false} onToggle={onTogglePlay} />
+          <PlayButton size="sm" isPlaying={isCurrent ? isPlaying : false} onToggle={onTogglePlay} />
         </div>
       </div>
 
       {/* Bottom CTA Panel (half-oval) */}
-      <div className="mt-auto px-6 pb-6">
-        <div className="relative w-full overflow-hidden rounded-t-[999px] rounded-b-[48px] border border-black/5 bg-white/80 shadow-[0_-18px_45px_rgba(0,0,0,0.08)] backdrop-blur-md">
-          {/* top indicator */}
-          <div className="absolute left-1/2 top-5 -translate-x-1/2">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-red-500/20 blur-xl" />
-              <div className="mx-auto h-6 w-1.5 rounded-full bg-red-500" />
-            </div>
-          </div>
-
-          <div className="px-6 pt-14 pb-10 h-[230px] rounded-[32px] bg-white/35 backdrop-blur-xl border border-white/30 shadow-sm">
-            <ActionButton
-              isSubscribed={channel.isSubscribed}
-              onSubscribe={onSubscribe}
-              onViewOriginal={onViewOriginal}
-            />
-          </div>
-        </div>
+      <div className="w-full flex-1 flex items-end px-6 sm:px-8 pb-[80px]">
+        <ActionButton
+          isSubscribed={channel.isSubscribed}
+          onSubscribe={onSubscribe}
+          onViewOriginal={onViewOriginal}
+          className="w-full"
+        />
       </div>
     </div>
   );
@@ -335,7 +419,7 @@ export const PlayerSurface = ({
   return (
     <div 
       ref={containerRef}
-      className="min-h-screen bg-white overflow-hidden relative"
+      className="min-h-[100dvh] w-full bg-background overflow-hidden relative"
     >
       {/* Current content sliding out */}
       {renderContent(displayEpisode, getCurrentTransform(), true)}
@@ -344,17 +428,26 @@ export const PlayerSurface = ({
       {isAnimating && episode.id !== displayEpisode.id && (
         <div
           key={`next-${episode.id}`}
-          className="absolute inset-0 min-h-screen bg-white flex flex-col safe-area-top safe-area-bottom"
+          className="absolute inset-0 h-full w-full bg-background flex flex-col safe-area-top safe-area-bottom"
           style={{
             transform: getNextInitialTransform(),
             transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)',
             zIndex: 3,
           }}
           ref={(el) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro3',hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:nextRef',message:el?'next_ref_mount':'next_ref_unmount',data:{episodeId:episode.id,displayEpisodeId:displayEpisode.id,slideDirection,isAnimating,initialTransform:getNextInitialTransform()},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion agent log
             // Trigger animation by setting final position after initial render
             if (el) {
               requestAnimationFrame(() => {
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro3',hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:nextRef',message:'next_ref_rAF_before',data:{episodeId:episode.id,domTransformBefore:el.style.transform,initialTransform:getNextInitialTransform()},timestamp:Date.now()})}).catch(()=>{});
+                // #endregion agent log
                 el.style.transform = 'translateY(0)';
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/d259a774-2bef-46a8-b9a0-7c6200d29034',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'repro3',hypothesisId:'H3',location:'src/components/player/PlayerSurface.tsx:nextRef',message:'next_ref_rAF_after',data:{episodeId:episode.id,domTransformAfter:el.style.transform},timestamp:Date.now()})}).catch(()=>{});
+                // #endregion agent log
               });
             }
           }}
@@ -373,15 +466,15 @@ export const PlayerSurface = ({
                 </div>
 
                 {/* Cover Image Area */}
-                <div className="flex items-center justify-center px-12 py-8">
-                  <div className="relative" style={{ width: '450px', height: '225px' }}>
+                <div className="flex items-center justify-center px-0 py-8 sm:py-10">
+                  <div className="relative w-full max-w-[520px] aspect-[2/1]">
                     <img
                       src={ep.coverImage ?? channel.coverImage}
                       alt={channel.name}
-                      className="w-full h-full object-cover rounded-2xl shadow-player-card"
+                      className="w-full h-full object-cover rounded-none shadow-player-card"
                     />
                     <div 
-                      className="absolute inset-0 rounded-2xl"
+                      className="absolute right-0 bottom-0 h-full w-full rounded-none"
                       style={{ 
                         background: 'linear-gradient(180deg, transparent 60%, hsla(0, 75%, 45%, 0.22) 100%)' 
                       }}
@@ -390,27 +483,25 @@ export const PlayerSurface = ({
                 </div>
 
                 {/* Content Info Area */}
-                <div className="px-6 space-y-4">
+                <div className="px-6 sm:px-8 space-y-5">
                   <h1 
-                    className="text-xl font-bold leading-tight line-clamp-2"
+                    className="text-xl font-bold leading-tight"
                     style={{ color: 'hsl(40, 15%, 15%)' }}
                   >
-                    {ep.title}
+                    <ScrollingText text={ep.title} />
                   </h1>
 
                   <div className="flex items-center justify-between">
                     <button
                       type="button"
                       onClick={onOpenChannelInfo}
-                      className="text-base font-medium text-left transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
-                      style={{ color: 'rgb(134, 104, 45)' }}
+                      className="text-base font-medium text-left text-neutral-800 transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
                       aria-label="View channel info"
                     >
                       {channel.name}
                     </button>
                     <p 
-                      className="text-sm font-medium"
-                      style={{ color: 'rgb(107, 87, 46)' }}
+                      className="text-sm font-medium text-neutral-700"
                     >
                       {ep.publishedAt}
                     </p>
@@ -425,7 +516,7 @@ export const PlayerSurface = ({
                       onSeek={() => {}}
                       hideTime={true}
                     />
-                    <div className="flex items-center justify-between mt-2 text-sm" style={{ color: 'hsl(40, 30%, 30%)' }}>
+                    <div className="flex items-center justify-between mt-3 text-sm text-neutral-700">
                       <span>0:00</span>
                       <span>0:00</span>
                     </div>
@@ -434,34 +525,24 @@ export const PlayerSurface = ({
                   {/* Transcript removed */}
                 </div>
 
-                <div className="px-6 py-4 relative">
+                <div className="px-6 sm:px-8 py-5 relative">
                   <PlaybackControls
                     onSkipBack={onSkipBack}
                     onSkipForward={onSkipForward}
                   />
                   <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <PlayButton isPlaying={false} onToggle={onTogglePlay} />
+                    <PlayButton size="sm" isPlaying={false} onToggle={onTogglePlay} />
                   </div>
                 </div>
 
                 {/* Bottom CTA Panel (half-oval) */}
-                <div className="mt-auto px-6 pb-6">
-                  <div className="relative w-full overflow-hidden rounded-t-[999px] rounded-b-[48px] border border-black/5 bg-white/80 shadow-[0_-18px_45px_rgba(0,0,0,0.08)] backdrop-blur-md">
-                    <div className="absolute left-1/2 top-5 -translate-x-1/2">
-                      <div className="relative">
-                        <div className="absolute inset-0 rounded-full bg-red-500/20 blur-xl" />
-                        <div className="mx-auto h-6 w-1.5 rounded-full bg-red-500" />
-                      </div>
-                    </div>
-
-                    <div className="px-6 pt-14 pb-10 h-[230px] rounded-[32px] bg-white/35 backdrop-blur-xl border border-white/30 shadow-sm">
-                      <ActionButton
-                        isSubscribed={channel.isSubscribed}
-                        onSubscribe={onSubscribe}
-                        onViewOriginal={onViewOriginal}
-                      />
-                    </div>
-                  </div>
+                <div className="w-full flex-1 flex items-end px-6 sm:px-8 pb-[80px]">
+                  <ActionButton
+                    isSubscribed={channel.isSubscribed}
+                    onSubscribe={onSubscribe}
+                    onViewOriginal={onViewOriginal}
+                    className="w-full"
+                  />
                 </div>
               </>
             );

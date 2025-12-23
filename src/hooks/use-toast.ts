@@ -4,6 +4,7 @@ import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
+const TOAST_DEFAULT_DURATION = 1000;
 
 type ToasterToast = ToastProps & {
   id: string;
@@ -51,6 +52,7 @@ interface State {
 }
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+const toastDismissTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
@@ -155,6 +157,20 @@ function toast({ ...props }: Toast) {
       },
     },
   });
+
+  // Auto-dismiss after duration (default 1s)
+  const duration = props.duration ?? TOAST_DEFAULT_DURATION;
+  if (duration !== Infinity) {
+    const existing = toastDismissTimeouts.get(id);
+    if (existing) clearTimeout(existing);
+    toastDismissTimeouts.set(
+      id,
+      setTimeout(() => {
+        toastDismissTimeouts.delete(id);
+        dismiss();
+      }, duration),
+    );
+  }
 
   return {
     id: id,

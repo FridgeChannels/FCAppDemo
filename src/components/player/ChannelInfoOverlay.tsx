@@ -22,13 +22,13 @@ export const ChannelInfoOverlay = ({
         side="bottom" 
         className="rounded-t-3xl border-t-0 bg-card text-card-foreground max-h-[60vh]"
       >
-        <div className="mx-auto w-12 h-1.5 rounded-full bg-muted-foreground/30 mb-6" />
+        <div className="mx-auto w-12 h-1.5 rounded-full bg-muted-foreground/30 mb-8" />
         
         <SheetHeader className="sr-only">
           <SheetTitle>Channel Info</SheetTitle>
         </SheetHeader>
 
-        <div className="flex items-start gap-4 mb-6">
+        <div className="flex items-start gap-5 mb-8">
           {/* Channel Cover */}
           <img
             src={channel.coverImage}
@@ -69,7 +69,7 @@ export const ChannelInfoOverlay = ({
         </div>
 
         {/* Description */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             About
           </h3>

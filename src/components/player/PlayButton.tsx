@@ -9,7 +9,7 @@ interface PlayButtonProps {
 }
 
 const sizeMap = {
-  sm: { button: 'w-12 h-12', icon: 20 },
+  sm: { button: 'w-12 h-12', icon: 24 },
   md: { button: 'w-16 h-16', icon: 28 },
   lg: { button: 'w-20 h-20', icon: 36 },
 };
@@ -20,33 +20,29 @@ export const PlayButton = ({
   size = 'lg',
   className,
 }: PlayButtonProps) => {
-  const { button, icon } = sizeMap[size];
+  const { icon } = sizeMap[size];
 
   return (
     <button
       onClick={onToggle}
       className={cn(
-        button,
-        'rounded-full flex items-center justify-center transition-all duration-200',
-        'shadow-player-control hover:scale-105 active:scale-95',
+        'inline-flex items-center justify-center bg-transparent',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         className
       )}
-      style={{
-        backgroundColor: 'hsla(40, 25%, 98%, 0.95)',
-      }}
       aria-label={isPlaying ? 'Pause' : 'Play'}
     >
       {isPlaying ? (
         <Pause
           size={icon}
-          style={{ color: 'hsl(40, 80%, 30%)' }}
-          fill="hsl(40, 80%, 30%)"
+          className="text-neutral-800"
+          fill="currentColor"
         />
       ) : (
         <Play
           size={icon}
-          style={{ color: 'hsl(40, 80%, 30%)', marginLeft: '4px' }}
-          fill="hsl(40, 80%, 30%)"
+          className="text-neutral-800"
+          fill="currentColor"
         />
       )}
     </button>
