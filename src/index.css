@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fridge Channel App Design System
+   Inspired by Apple Podcasts + Spotify
+   Primary: Warm Gold/Amber gradient theme
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    /* Core Player Theme - Warm Gold/Amber */
+    --background: 40 100% 50%;
+    --background-gradient-start: 45 100% 55%;
+    --background-gradient-end: 30 90% 45%;
+    --foreground: 40 15% 15%;
+    
+    /* Text colors on gradient background */
+    --text-primary: 40 10% 12%;
+    --text-secondary: 40 30% 25%;
+    --text-muted: 40 40% 35%;
+    --text-on-dark: 40 20% 95%;
+
+    /* Card - for overlays */
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 95%;
+
+    /* Popover / Sheet */
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    /* Primary action - cream/white on gold */
+    --primary: 40 25% 98%;
+    --primary-foreground: 40 80% 35%;
+
+    /* Secondary */
+    --secondary: 40 50% 90%;
+    --secondary-foreground: 40 80% 30%;
+
+    /* Muted elements */
+    --muted: 40 40% 85%;
+    --muted-foreground: 40 30% 40%;
+
+    /* Accent - brighter gold */
+    --accent: 38 100% 60%;
+    --accent-foreground: 40 80% 20%;
+
+    /* Destructive */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Borders & inputs */
+    --border: 40 40% 75%;
+    --input: 40 40% 80%;
+    --ring: 40 80% 50%;
+
+    --radius: 1rem;
+
+    /* Player-specific tokens */
+    --player-bg: linear-gradient(180deg, hsl(45, 100%, 55%) 0%, hsl(35, 95%, 48%) 50%, hsl(28, 85%, 42%) 100%);
+    --player-control-bg: hsla(40, 25%, 98%, 0.95);
+    --player-control-hover: hsla(40, 25%, 100%, 1);
+    --progress-track: hsla(40, 50%, 30%, 0.4);
+    --progress-fill: hsl(40, 20%, 95%);
+
+    /* Episode list (dark theme) */
+    --list-bg: 0 0% 8%;
+    --list-item-bg: 0 0% 12%;
+    --list-item-hover: 0 0% 16%;
+    --list-text-primary: 0 0% 95%;
+    --list-text-secondary: 0 0% 65%;
+    --list-accent: 140 70% 50%;
+
+    /* Sidebar defaults */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 0 0% 6%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 140 70% 50%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 140 70% 50%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 140 70% 50%;
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 0 0% 85%;
+    --sidebar-primary: 140 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 140 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 600;
+  }
+}
+
+@layer utilities {
+  /* Player gradient backgrounds */
+  .bg-player-gradient {
+    background: linear-gradient(180deg, hsl(45, 100%, 55%) 0%, hsl(35, 95%, 48%) 50%, hsl(28, 85%, 42%) 100%);
+  }
+
+  .bg-list-gradient {
+    background: linear-gradient(180deg, hsl(0, 0%, 12%) 0%, hsl(0, 0%, 8%) 100%);
+  }
+
+  /* Glass effect for controls */
+  .glass-control {
+    background: hsla(40, 25%, 98%, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Text shadows for readability on gradient */
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px hsla(0, 0%, 0%, 0.1);
+  }
+
+  /* Smooth transitions */
+  .transition-player {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Safe area padding for mobile */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 20px);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+}
+
+/* Custom scrollbar for episode list */
+.episode-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.episode-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.episode-list::-webkit-scrollbar-thumb {
+  background: hsla(0, 0%, 100%, 0.2);
+  border-radius: 2px;
+}
+
+/* Animation keyframes */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cta-breathe {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 14px 34px rgba(220, 38, 38, 0.28);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.03);
+    box-shadow: 0 18px 46px rgba(220, 38, 38, 0.42);
+  }
+}
+
+.cta-breathe {
+  animation: cta-breathe 2.2s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
