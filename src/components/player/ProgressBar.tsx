@@ -32,9 +32,10 @@ export const ProgressBar = ({
   return (
     <div className={cn('w-full', className)}>
       <div
-        className="relative h-1.5 rounded-full cursor-pointer group bg-neutral-300"
+        className="relative h-1.5 sm:h-2 rounded-full cursor-pointer group bg-neutral-300 touch-none"
         onClick={handleClick}
         onMouseMove={handleDrag}
+        style={{ minHeight: '6px' }}
       >
         {/* Progress fill */}
         <div
@@ -43,18 +44,20 @@ export const ProgressBar = ({
             width: `${progress}%`,
           }}
         />
-        {/* Drag handle */}
+        {/* Drag handle - larger on mobile for touch */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-neutral-800 opacity-0 sm:group-hover:opacity-100 transition-opacity shadow-lg touch-none"
           style={{
             left: `calc(${progress}% - 8px)`,
+            minWidth: '16px',
+            minHeight: '16px',
           }}
         />
       </div>
       {!hideTime && (
-        <div className="flex justify-between mt-2 text-sm text-neutral-700">
-          <span>{currentTime}</span>
-          <span>{duration}</span>
+        <div className="flex justify-between mt-2 text-xs sm:text-sm text-neutral-700">
+          <span className="truncate">{currentTime}</span>
+          <span className="truncate ml-2">{duration}</span>
         </div>
       )}
     </div>

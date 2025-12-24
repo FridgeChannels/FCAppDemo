@@ -58,8 +58,8 @@ export const ScrollingText: React.FC<ScrollingTextProps> = ({ text, className })
       <span
         ref={textRef}
         className={cn(
-          "inline-block whitespace-nowrap",
-          isOverflowing && scrollDistance > 0 ? "title-marquee" : ""
+          "inline-block",
+          isOverflowing && scrollDistance > 0 ? "whitespace-nowrap title-marquee" : "whitespace-normal break-words"
         )}
         style={cssVars}
         title={text}

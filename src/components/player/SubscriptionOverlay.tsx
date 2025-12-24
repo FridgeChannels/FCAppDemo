@@ -44,7 +44,7 @@ export const SubscriptionOverlay = ({
   const selectedPlanObj = plans.find((p) => p.id === selectedPlan) ?? plans[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center no-scroll-x">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
 
@@ -58,27 +58,27 @@ export const SubscriptionOverlay = ({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-500 transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="absolute right-3 sm:right-4 top-3 sm:top-4 inline-flex h-11 w-11 sm:h-10 sm:w-10 items-center justify-center rounded-full text-neutral-500 transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-target"
         >
           <X size={22} />
         </button>
 
         {/* Content (fit within one screen; no inner scroll) */}
-        <div className="px-5 sm:px-6 pb-5 pt-9 flex flex-col gap-4">
+        <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 pt-8 sm:pt-9 flex flex-col gap-3 sm:gap-4 max-h-[92vh] overflow-y-auto">
           {/* Avatar */}
           <div className="flex justify-center">
             <img
               src="/fire.png"
               alt={`${channel.creatorName} logo`}
-              className="h-14 w-14 rounded-[5px] object-cover shadow-md"
+              className="h-12 w-12 sm:h-14 sm:w-14 rounded-[5px] object-cover shadow-md"
             />
           </div>
 
           {/* Title */}
-          <h2 className="text-center text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-900 leading-tight">
+          <h2 className="text-center text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-neutral-900 leading-tight text-wrap-safe break-words px-2">
             Subscribe to {channel.name}
           </h2>
-          <p className="text-center text-sm sm:text-base text-neutral-500">
+          <p className="text-center text-xs sm:text-sm md:text-base text-neutral-500 text-wrap-safe break-words px-2">
             Consider supporting {channel.name} by choosing a paid subscription.
           </p>
 
@@ -92,19 +92,19 @@ export const SubscriptionOverlay = ({
                   type="button"
                   onClick={() => setSelectedPlan(plan.id)}
                   className={[
-                    "w-full rounded-[5px] px-4 py-3 text-left transition-colors",
+                    "w-full rounded-[5px] px-3 sm:px-4 py-3 min-h-[44px] text-left transition-colors",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                     isSelected ? "bg-neutral-50" : "hover:bg-neutral-50",
                   ].join(" ")}
                   aria-pressed={isSelected}
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
+                  <div className="flex items-center justify-between gap-3 sm:gap-4">
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-baseline gap-x-2">
-                        <span className={isSelected ? "text-base font-semibold text-neutral-900" : "text-base font-semibold text-neutral-500"}>
+                        <span className={isSelected ? "text-sm sm:text-base font-semibold text-neutral-900" : "text-sm sm:text-base font-semibold text-neutral-500"}>
                           {plan.label}
                         </span>
-                        <span className={isSelected ? "text-base text-neutral-700" : "text-base text-neutral-400"}>
+                        <span className={isSelected ? "text-sm sm:text-base text-neutral-700" : "text-sm sm:text-base text-neutral-400"}>
                           {plan.priceDisplay}
                         </span>
                       </div>
@@ -112,7 +112,7 @@ export const SubscriptionOverlay = ({
 
                     <div
                       className={[
-                        "flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors",
+                        "flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors flex-shrink-0",
                         isSelected ? "border-red-600 bg-red-600" : "border-neutral-300 bg-white",
                       ].join(" ")}
                       aria-hidden="true"
@@ -128,11 +128,11 @@ export const SubscriptionOverlay = ({
           {/* Benefits */}
           <div className="space-y-2 px-1">
             {benefits.map((benefit, index) => (
-              <div key={index} className="flex items-start gap-2">
+              <div key={index} className="flex items-start gap-2 sm:gap-3">
                 <div className="mt-0.5 flex-shrink-0">
                   <Check size={16} className="text-orange-500" strokeWidth={2.5} />
                 </div>
-                <p className="text-sm leading-snug text-neutral-800">{benefit}</p>
+                <p className="text-xs sm:text-sm leading-snug text-neutral-800 text-wrap-safe break-words">{benefit}</p>
               </div>
             ))}
           </div>
@@ -141,11 +141,11 @@ export const SubscriptionOverlay = ({
           <div className="pt-1">
             <Button
               onClick={handleSubscribe}
-              className="w-full h-12 rounded-[5px] text-base font-semibold bg-red-600 hover:bg-red-700 text-white shadow-lg"
+              className="w-full h-12 sm:h-14 rounded-[5px] text-sm sm:text-base font-semibold bg-red-600 hover:bg-red-700 text-white shadow-lg touch-target"
             >
               Subscribe • {selectedPlanObj.priceDisplay}
             </Button>
-            <p className="mt-2 text-center text-xs text-neutral-500">
+            <p className="mt-2 text-center text-xs text-neutral-500 text-wrap-safe break-words px-2">
               Or, continue with in-app payment ($388/year)
             </p>
           </div>

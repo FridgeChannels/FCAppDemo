@@ -6,6 +6,7 @@ import { PlaybackControls } from './PlaybackControls';
 import { ProgressBar } from './ProgressBar';
 import { ActionButton } from './ActionButton';
 import { ScrollingText } from './ScrollingText';
+import { ExcerptPreview } from './ExcerptPreview';
 
 interface PlayerSurfaceProps {
   episode: Episode;
@@ -250,7 +251,7 @@ export const PlayerSurface = ({
       onClick={onBack}
       disabled={!onBack}
       aria-label="Back"
-      className="absolute left-4 top-[calc(env(safe-area-inset-top,20px)+12px)] z-20 inline-flex h-10 w-10 items-center justify-center rounded-full text-black/80 transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+      className="absolute left-2 sm:left-4 top-[calc(env(safe-area-inset-top,0px)+12px)] z-20 inline-flex h-11 w-11 sm:h-10 sm:w-10 items-center justify-center rounded-full text-black/80 transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 touch-target"
     >
       <ChevronLeft className="h-5 w-5" />
     </button>
@@ -260,7 +261,7 @@ export const PlayerSurface = ({
   const renderContent = (ep: Episode, transform: string, isCurrent: boolean) => (
     <div
       key={ep.id}
-      className="absolute inset-0 h-full w-full bg-background flex flex-col safe-area-top safe-area-bottom"
+      className="absolute inset-0 h-full w-full bg-background flex min-h-screen flex-col safe-area-top"
       style={{
         transform,
         transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -268,91 +269,104 @@ export const PlayerSurface = ({
       }}
     >
       {backButton}
-      {/* Top drag indicator */}
-      <div className="flex justify-center pt-3 pb-2">
-        <div 
-          className="w-10 h-1 rounded-full"
-          style={{ backgroundColor: 'hsla(40, 30%, 30%, 0.3)' }}
-        />
-      </div>
-
-      {/* Cover Image Area */}
-      <div className="flex items-center justify-center px-0 py-8 sm:py-10">
-        <div className="relative w-full max-w-[520px] aspect-[2/1]">
-          <img
-            src={ep.coverImage ?? channel.coverImage}
-            alt={channel.name}
-            className="w-full h-full object-cover rounded-none shadow-player-card"
-          />
-          {/* Subtle overlay for depth */}
+      
+      {/* 上方内容 */}
+      <div className="flex-shrink-0">
+        {/* Top drag indicator */}
+        <div className="flex justify-center pt-3 pb-2">
           <div 
-            className="absolute right-0 bottom-0 h-full w-full rounded-none"
-            style={{ 
-              background: 'linear-gradient(180deg, transparent 60%, hsla(0, 75%, 45%, 0.22) 100%)' 
-            }}
+            className="w-10 h-1 rounded-full"
+            style={{ backgroundColor: 'hsla(40, 30%, 30%, 0.3)' }}
           />
         </div>
-      </div>
 
-      {/* Content Info Area */}
-      <div className="px-6 sm:px-8 space-y-5">
-        {/* Title */}
-        <h1 
-          className="text-xl font-bold leading-tight"
-          style={{ color: 'hsl(40, 15%, 15%)' }}
-        >
-          <ScrollingText text={ep.title} />
-        </h1>
-
-        {/* Channel & Date */}
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onOpenChannelInfo}
-            className="text-base font-medium text-left text-neutral-800 transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
-            aria-label="View channel info"
-          >
-            {channel.name}
-          </button>
-          <p 
-            className="text-sm font-medium text-neutral-700"
-          >
-            {ep.publishedAt}
-          </p>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="w-full">
-            <ProgressBar
-              progress={isCurrent ? progress : (ep.progress || 0)}
-              currentTime={isCurrent ? currentTime : '0:00'}
-              duration={isCurrent ? duration : '0:00'}
-              onSeek={isCurrent ? onSeek : () => {}}
-              hideTime={true}
+        {/* Cover Image Area */}
+        <div className="flex items-center justify-center px-3 sm:px-0 py-4 sm:py-8 md:py-10">
+          <div className="relative w-full max-w-[520px] aspect-[2/1]">
+            <img
+              src={ep.coverImage ?? channel.coverImage}
+              alt={channel.name}
+              className="w-full h-full object-cover rounded-none shadow-player-card"
             />
-            <div className="flex items-center justify-between mt-3 text-sm text-neutral-700">
-              <span>{isCurrent ? currentTime : '0:00'}</span>
-              <span>{isCurrent ? duration : '0:00'}</span>
-            </div>
+            {/* Subtle overlay for depth */}
+            <div 
+              className="absolute right-0 bottom-0 h-full w-full rounded-none"
+              style={{ 
+                background: 'linear-gradient(180deg, transparent 60%, hsla(0, 75%, 45%, 0.22) 100%)' 
+              }}
+            />
+          </div>
         </div>
 
-        {/* Transcript removed */}
+        {/* Content Info Area */}
+        <div className="px-4 sm:px-6 md:px-8 space-y-4 sm:space-y-5">
+          {/* Title */}
+          <h1 
+            className="text-lg sm:text-xl font-bold leading-tight text-wrap-safe"
+            style={{ color: 'hsl(40, 15%, 15%)' }}
+          >
+            <ScrollingText text={ep.title} />
+          </h1>
+
+          {/* Channel & Date */}
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            <button
+              type="button"
+              onClick={onOpenChannelInfo}
+              className="text-sm sm:text-base font-medium text-left text-neutral-800 transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm min-h-[44px] px-2 -ml-2 touch-target"
+              aria-label="View channel info"
+            >
+              <span className="text-wrap-safe">{channel.name}</span>
+            </button>
+            <p 
+              className="text-xs sm:text-sm font-medium text-neutral-700 flex-shrink-0"
+            >
+              {ep.publishedAt}
+            </p>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="w-full">
+              <ProgressBar
+                progress={isCurrent ? progress : (ep.progress || 0)}
+                currentTime={isCurrent ? currentTime : '0:00'}
+                duration={isCurrent ? duration : '0:00'}
+                onSeek={isCurrent ? onSeek : () => {}}
+                hideTime={true}
+              />
+              <div className="flex items-center justify-between mt-2 sm:mt-3 text-xs sm:text-sm text-neutral-700">
+                <span>{isCurrent ? currentTime : '0:00'}</span>
+                <span>{isCurrent ? duration : '0:00'}</span>
+              </div>
+          </div>
+
+          {/* Transcript removed */}
+        </div>
+
+        {/* Playback Controls */}
+        <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-5 relative">
+          <PlaybackControls
+            onSkipBack={onSkipBack}
+            onSkipForward={onSkipForward}
+          />
+          {/* Centered Play Button */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <PlayButton size="sm" isPlaying={isCurrent ? isPlaying : false} onToggle={onTogglePlay} />
+          </div>
+        </div>
       </div>
 
-      {/* Playback Controls */}
-      <div className="px-6 sm:px-8 py-5 relative">
-        <PlaybackControls
-          onSkipBack={onSkipBack}
-          onSkipForward={onSkipForward}
+      {/* 中间预览区：自动吃掉多余空间，确保在 CTA 上方 */}
+      <div className="flex-grow min-h-0 flex flex-col">
+        <ExcerptPreview
+          episode={ep}
+          onViewOriginal={onViewOriginal}
+          className="flex-1 min-h-0"
         />
-        {/* Centered Play Button */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <PlayButton size="sm" isPlaying={isCurrent ? isPlaying : false} onToggle={onTogglePlay} />
-        </div>
       </div>
 
-      {/* Bottom CTA Panel (half-oval) */}
-      <div className="w-full flex-1 flex items-end px-6 sm:px-8 pb-[80px]">
+      {/* 底部 CTA - 固定在底部 */}
+      <div className="px-4 pt-2 pb-2 flex-shrink-0 bg-background relative z-20" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))` }}>
         <ActionButton
           isSubscribed={channel.isSubscribed}
           onSubscribe={onSubscribe}
@@ -366,7 +380,7 @@ export const PlayerSurface = ({
   return (
     <div 
       ref={containerRef}
-      className="min-h-[100dvh] w-full bg-background overflow-hidden relative"
+      className="min-h-[100dvh] w-full bg-background overflow-hidden relative no-scroll-x"
     >
       {/* Current content sliding out */}
       {renderContent(displayEpisode, getCurrentTransform(), true)}
@@ -375,7 +389,7 @@ export const PlayerSurface = ({
       {isAnimating && episode.id !== displayEpisode.id && (
         <div
           key={`next-${episode.id}`}
-          className="absolute inset-0 h-full w-full bg-background flex flex-col safe-area-top safe-area-bottom"
+          className="absolute inset-0 h-full w-full bg-background flex min-h-screen flex-col safe-area-top"
           style={{
             transform: getNextInitialTransform(),
             transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -395,86 +409,99 @@ export const PlayerSurface = ({
             const ep = episode;
             return (
               <>
-                {/* Top drag indicator */}
-                <div className="flex justify-center pt-3 pb-2">
-                  <div 
-                    className="w-10 h-1 rounded-full"
-                    style={{ backgroundColor: 'hsla(40, 30%, 30%, 0.3)' }}
-                  />
-                </div>
-
-                {/* Cover Image Area */}
-                <div className="flex items-center justify-center px-0 py-8 sm:py-10">
-                  <div className="relative w-full max-w-[520px] aspect-[2/1]">
-                    <img
-                      src={ep.coverImage ?? channel.coverImage}
-                      alt={channel.name}
-                      className="w-full h-full object-cover rounded-none shadow-player-card"
-                    />
+                {/* 上方内容 */}
+                <div className="flex-shrink-0">
+                  {/* Top drag indicator */}
+                  <div className="flex justify-center pt-3 pb-2">
                     <div 
-                      className="absolute right-0 bottom-0 h-full w-full rounded-none"
-                      style={{ 
-                        background: 'linear-gradient(180deg, transparent 60%, hsla(0, 75%, 45%, 0.22) 100%)' 
-                      }}
+                      className="w-10 h-1 rounded-full"
+                      style={{ backgroundColor: 'hsla(40, 30%, 30%, 0.3)' }}
                     />
                   </div>
-                </div>
 
-                {/* Content Info Area */}
-                <div className="px-6 sm:px-8 space-y-5">
-                  <h1 
-                    className="text-xl font-bold leading-tight"
-                    style={{ color: 'hsl(40, 15%, 15%)' }}
-                  >
-                    <ScrollingText text={ep.title} />
-                  </h1>
-
-                  <div className="flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={onOpenChannelInfo}
-                      className="text-base font-medium text-left text-neutral-800 transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
-                      aria-label="View channel info"
-                    >
-                      {channel.name}
-                    </button>
-                    <p 
-                      className="text-sm font-medium text-neutral-700"
-                    >
-                      {ep.publishedAt}
-                    </p>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="w-full">
-                    <ProgressBar
-                      progress={ep.progress || 0}
-                      currentTime="0:00"
-                      duration="0:00"
-                      onSeek={() => {}}
-                      hideTime={true}
-                    />
-                    <div className="flex items-center justify-between mt-3 text-sm text-neutral-700">
-                      <span>0:00</span>
-                      <span>0:00</span>
+                  {/* Cover Image Area */}
+                  <div className="flex items-center justify-center px-3 sm:px-0 py-4 sm:py-8 md:py-10">
+                    <div className="relative w-full max-w-[520px] aspect-[2/1]">
+                      <img
+                        src={ep.coverImage ?? channel.coverImage}
+                        alt={channel.name}
+                        className="w-full h-full object-cover rounded-none shadow-player-card"
+                      />
+                      <div 
+                        className="absolute right-0 bottom-0 h-full w-full rounded-none"
+                        style={{ 
+                          background: 'linear-gradient(180deg, transparent 60%, hsla(0, 75%, 45%, 0.22) 100%)' 
+                        }}
+                      />
                     </div>
                   </div>
 
-                  {/* Transcript removed */}
-                </div>
+                  {/* Content Info Area */}
+                  <div className="px-4 sm:px-6 md:px-8 space-y-4 sm:space-y-5">
+                    <h1 
+                      className="text-lg sm:text-xl font-bold leading-tight text-wrap-safe"
+                      style={{ color: 'hsl(40, 15%, 15%)' }}
+                    >
+                      <ScrollingText text={ep.title} />
+                    </h1>
 
-                <div className="px-6 sm:px-8 py-5 relative">
-                  <PlaybackControls
-                    onSkipBack={onSkipBack}
-                    onSkipForward={onSkipForward}
-                  />
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <PlayButton size="sm" isPlaying={false} onToggle={onTogglePlay} />
+                    <div className="flex items-center justify-between gap-2 sm:gap-4">
+                      <button
+                        type="button"
+                        onClick={onOpenChannelInfo}
+                        className="text-sm sm:text-base font-medium text-left text-neutral-800 transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm min-h-[44px] px-2 -ml-2 touch-target"
+                        aria-label="View channel info"
+                      >
+                        <span className="text-wrap-safe">{channel.name}</span>
+                      </button>
+                      <p 
+                        className="text-xs sm:text-sm font-medium text-neutral-700 flex-shrink-0"
+                      >
+                        {ep.publishedAt}
+                      </p>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full">
+                      <ProgressBar
+                        progress={ep.progress || 0}
+                        currentTime="0:00"
+                        duration="0:00"
+                        onSeek={() => {}}
+                        hideTime={true}
+                      />
+                      <div className="flex items-center justify-between mt-2 sm:mt-3 text-xs sm:text-sm text-neutral-700">
+                        <span>0:00</span>
+                        <span>0:00</span>
+                      </div>
+                    </div>
+
+                    {/* Transcript removed */}
+                  </div>
+
+                  {/* Playback Controls */}
+                  <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-5 relative">
+                    <PlaybackControls
+                      onSkipBack={onSkipBack}
+                      onSkipForward={onSkipForward}
+                    />
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <PlayButton size="sm" isPlaying={false} onToggle={onTogglePlay} />
+                    </div>
                   </div>
                 </div>
 
-                {/* Bottom CTA Panel (half-oval) */}
-                <div className="w-full flex-1 flex items-end px-6 sm:px-8 pb-[80px]">
+                {/* 中间预览区：自动吃掉多余空间，确保在 CTA 上方 */}
+                <div className="flex-grow min-h-0 flex flex-col">
+                  <ExcerptPreview
+                    episode={ep}
+                    onViewOriginal={onViewOriginal}
+                    className="flex-1 min-h-0"
+                  />
+                </div>
+
+                {/* 底部 CTA - 固定在底部 */}
+                <div className="px-4 pt-2 pb-2 flex-shrink-0 bg-background relative z-20" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))` }}>
                   <ActionButton
                     isSubscribed={channel.isSubscribed}
                     onSubscribe={onSubscribe}

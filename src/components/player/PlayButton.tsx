@@ -26,8 +26,9 @@ export const PlayButton = ({
     <button
       onClick={onToggle}
       className={cn(
-        'inline-flex items-center justify-center bg-transparent',
+        'inline-flex items-center justify-center bg-transparent min-h-[44px] min-w-[44px]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        'touch-target',
         className
       )}
       aria-label={isPlaying ? 'Pause' : 'Play'}
