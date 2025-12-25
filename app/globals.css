@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Atlantic Condensed font */
+@font-face {
+  font-family: 'Atlantic Condensed';
+  src: local('Atlantic Condensed'), local('AtlanticCondensed');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Lyon Text font */
+@font-face {
+  font-family: 'Lyon Text';
+  src: local('Lyon Text'), local('LyonText-Regular');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #FFFFFF;
+  color: #000000;
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
+
+/* Prevent text selection on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Safe area support for notched devices */
+@supports (padding: max(0px)) {
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .pt-safe {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+}
+
+/* Ensure text doesn't overflow */
+p, h1, h2, h3, h4, h5, h6, span, div {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Touch-friendly button sizes */
+button, a {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent horizontal scroll */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Scroll text animation */
+@keyframes scroll-text {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(calc(-100% + 424px));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+
+/* Hide Next.js dev overlay portal (dev only) */
+body[data-env="development"] nextjs-portal {
+  display: none !important;
+}
+
+/* Rich Text Renderer Styles */
+.drop-cap-article {
+  font-family: Georgia, serif;
+  color: #1f2937; /* text-gray-800 */
+}
+
+.drop-cap-article p {
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.625; /* leading-relaxed */
+  margin-bottom: 0.75rem; /* mb-3 */
+  word-wrap: break-word;
+}
+
+@media (min-width: 640px) {
+  .drop-cap-article p {
+    font-size: 1rem; /* sm:text-base */
+    margin-bottom: 1rem; /* sm:mb-4 */
+  }
+}
+
+/* Drop Cap for the first paragraph */
+.drop-cap-article > p:first-of-type::first-letter {
+  float: left;
+  font-family: 'Times New Roman', Times, serif; /* Often drop caps look better in standard serif or specific font */
+  font-size: 3rem; /* text-5xl */
+  line-height: 0.8;
+  margin-right: 0.5rem;
+  margin-top: 0.1rem;
+  font-weight: normal;
+}
+
+@media (min-width: 640px) {
+  .drop-cap-article > p:first-of-type::first-letter {
+    font-size: 3.75rem; /* text-6xl */
+  }
+}
+
+/* Headings within the article */
+.drop-cap-article h1, 
+.drop-cap-article h2, 
+.drop-cap-article h3 {
+  font-family: 'Georgia', serif;
+  font-weight: bold;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.drop-cap-article h2 {
+  font-size: 1.125rem; /* text-lg */
+}
+
+@media (min-width: 640px) {
+  .drop-cap-article h2 {
+    font-size: 1.25rem; /* sm:text-xl */
+    margin-top: 1.25rem; /* sm:mt-5 */
+    margin-bottom: 0.75rem; /* sm:mb-3 */
+  }
+}
+
+/* Links */
+.drop-cap-article a {
+  color: #2563eb; /* text-blue-600 */
+  text-decoration: none;
+}
+
+.drop-cap-article a:hover {
+  text-decoration: underline;
+}
+
+/* Lists */
+.drop-cap-article ul, 
+.drop-cap-article ol {
+  margin-left: 1rem;
+  margin-bottom: 0.75rem;
+  list-style-position: inside;
+}
+
+.drop-cap-article ul {
+  list-style-type: disc;
+}
+
+.drop-cap-article ol {
+  list-style-type: decimal;
+}
+
+.drop-cap-article li {
+  font-size: 0.875rem;
+  line-height: 1.625;
+}
+
+@media (min-width: 640px) {
+  .drop-cap-article li {
+    font-size: 1rem;
+  }
+}
