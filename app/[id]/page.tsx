@@ -82,7 +82,8 @@ export default function NewsletterPage() {
   useEffect(() => {
     async function loadNewsletter() {
       try {
-        const response = await fetch(`/api/newsletter/${id}`);
+        // Step 1: Fast initial load with basic data only, and no prompts
+        const response = await fetch(`/api/newsletter/${id}?basic=true&excludePrompts=true`);
 
         if (!response.ok) {
           setError('Failed to load newsletter');
@@ -94,6 +95,10 @@ export default function NewsletterPage() {
         setNewsletter(data);
         setNewsletterTitle(data.title);
         setLoading(false);
+
+        // Step 2: Eagerly fetch full content in background
+        loadFullContent(data);
+
       } catch (err) {
         console.error('Error loading newsletter:', err);
         setError('Failed to load newsletter');
@@ -103,6 +108,22 @@ export default function NewsletterPage() {
 
     loadNewsletter();
   }, [id]);
+
+  // Initial full content load
+  const loadFullContent = async (currentData: NewsletterData) => {
+    try {
+      const response = await fetch(`/api/newsletter/${id}?excludePrompts=true`);
+      if (response.ok) {
+        const fullData: NewsletterData = await response.json();
+        // Only update if we still have the same newsletter loaded
+        if (fullData.id === currentData.id) {
+          setNewsletter(prev => ({ ...prev, ...fullData }));
+        }
+      }
+    } catch (e) {
+      console.error("Background fetch failed", e);
+    }
+  };
 
   // Keep currentIndexRef in sync with currentIndex
   useEffect(() => {
@@ -229,7 +250,6 @@ export default function NewsletterPage() {
         }, 200);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, screenHeight, newsletterTitle]);
 
   const handleViewFullIssue = () => {
@@ -242,10 +262,28 @@ export default function NewsletterPage() {
     }
   };
 
-  const handleSubscribe = () => {
+  const handleSubscribe = async () => {
     // Mock: 付费成功
     setIsSubscribed(true);
     setShowSubscriptionModal(false);
+
+    // Ensure content is loaded (it should be by now due to eager loading)
+    if (!newsletter?.content) {
+      // Fallback: show loading or wait? 
+      // For now, let's just attempt to show it. 
+      // If background fetch failed, we might need to retry here.
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/newsletter/${id}?excludePrompts=true`);
+        if (response.ok) {
+          const fullData = await response.json();
+          setNewsletter(prev => ({ ...prev, ...fullData }));
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
     // 显示文章内容
     setShowArticleContent(true);
   };
@@ -416,7 +454,6 @@ export default function NewsletterPage() {
         setShowPlaybackControls(true);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newsletter]);
 
   // Auto-generate summary for the first article on mount
@@ -449,7 +486,6 @@ export default function NewsletterPage() {
       .finally(() => {
         setIsGeneratingNewsletter(false);
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Export function for external use (e.g., from conversation)
@@ -458,7 +494,6 @@ export default function NewsletterPage() {
     if (typeof window !== 'undefined') {
       (window as any).generateNewsletterAudio = handleNewsletterGenerate;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Start Playback (Unified)
@@ -706,7 +741,6 @@ export default function NewsletterPage() {
         audioRef.current.src = "";
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Touch handlers for mobile swipe
@@ -848,7 +882,7 @@ export default function NewsletterPage() {
         wheelDeltaSum = 0;
       };
     }
-  }, [articles.length]);
+  }, []);
 
   // Render loading state (AFTER all hooks)
   if (loading || !newsletter) {

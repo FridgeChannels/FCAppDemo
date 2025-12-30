@@ -9,27 +9,34 @@ import { NewsletterData } from '@/lib/types/notion';
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 const TEMPLATES = [
-    { key: 'magnet-red-thin', label: 'Magnet Red (Default)' },
-    { key: 'magnet-green-thin', label: 'Magnet Green' }
+    { key: 'magnet-red-thick', label: 'Magnet Red (Default)' },
+    { key: 'magnet-green-thick', label: 'Magnet Green' }
+];
+
+const MODEL_OPTIONS = [
+    // { label: 'Fish Speech 1.5', value: 'fishaudio/fish-speech-1.5' },
+    // { label: 'CosyVoice 2 0.5B', value: 'FunAudioLLM/CosyVoice2-0.5B' },
+    { label: 'Index TTS 2', value: 'IndexTeam/IndexTTS-2' }
 ];
 
 const VOICE_OPTIONS = [
     {
         label: "男生音色",
         options: [
-            { name: "沉稳男声 (Alex)", value: "IndexTeam/IndexTTS-2:alex" },
-            { name: "低沉男声 (Benjamin)", value: "IndexTeam/IndexTTS-2:benjamin" },
-            { name: "磁性男声 (Charles)", value: "IndexTeam/IndexTTS-2:charles" },
-            { name: "欢快男声 (David)", value: "IndexTeam/IndexTTS-2:david" },
+            { name: "用户上传 (0dd3...)", value: "speech:voice-0dd33f4a-c48f-49de-a76e-14030c61aedc:d56evi10hh4s716978v0:vrvoarhgqqpbauocruzr" },
+            { name: "沉稳男声 (Alex)", value: "alex" },
+            { name: "低沉男声 (Benjamin)", value: "benjamin" },
+            { name: "磁性男声 (Charles)", value: "charles" },
+            { name: "欢快男声 (David)", value: "david" },
         ]
     },
     {
         label: "女生音色",
         options: [
-            { name: "沉稳女声 (Anna)", value: "IndexTeam/IndexTTS-2:anna" },
-            { name: "激情女声 (Bella)", value: "IndexTeam/IndexTTS-2:bella" },
-            { name: "温柔女声 (Claire)", value: "IndexTeam/IndexTTS-2:claire" },
-            { name: "欢快女声 (Diana)", value: "IndexTeam/IndexTTS-2:diana" },
+            { name: "沉稳女声 (Anna)", value: "anna" },
+            { name: "激情女声 (Bella)", value: "bella" },
+            { name: "温柔女声 (Claire)", value: "claire" },
+            { name: "欢快女声 (Diana)", value: "diana" },
         ]
     }
 ];
@@ -48,7 +55,12 @@ export default function NewsletterEditorPage() {
     const [showTtsClone, setShowTtsClone] = useState(false);
     const [refAudioFile, setRefAudioFile] = useState<File | null>(null);
     const [refText, setRefText] = useState('');
+    const [selectedModel, setSelectedModel] = useState(MODEL_OPTIONS[0].value);
     const [selectedVoice, setSelectedVoice] = useState(VOICE_OPTIONS[0].options[0].value);
+
+    // TTS Optional Params
+    const [ttsSpeed, setTtsSpeed] = useState('1.1');
+    const [ttsEmotionPrompt, setTtsEmotionPrompt] = useState('Respond softly and kindly, with a thoughtful tone.');
 
     // AI Generation State
     const [aiGenerating, setAiGenerating] = useState<{ [key: string]: boolean }>({});
@@ -70,7 +82,7 @@ export default function NewsletterEditorPage() {
         setSearching(true);
         setError(null);
         setSuccess(null);
-        setNewsletter(null);
+        // setNewsletter(null); // Keep existing data while fetching to avoid flicker
 
         try {
             const response = await fetch(`/api/newsletter/${key}`);
@@ -161,7 +173,18 @@ export default function NewsletterEditorPage() {
         try {
             const form = new FormData();
             form.append('text', formData.consume);
-            form.append('voice', selectedVoice);
+
+            // Construct the full voice string: model:voice
+            // Example: fishaudio/fish-speech-1.5:alex
+            // If the voice is a custom uploaded voice (starts with speech:), use it as is.
+            const fullVoiceString = selectedVoice.startsWith('speech:')
+                ? selectedVoice
+                : `${selectedModel}:${selectedVoice}`;
+            form.append('voice', fullVoiceString);
+            form.append('model', selectedModel);
+            form.append('speed', ttsSpeed);
+            form.append('emotion_prompt', ttsEmotionPrompt);
+            form.append('should_use_prompt_for_emotion', 'true');
 
             if (showTtsClone && refAudioFile) {
                 form.append('referenceAudio', refAudioFile);
@@ -275,12 +298,12 @@ export default function NewsletterEditorPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50/50 py-6 lg:py-10 px-4 sm:px-6 lg:px-8 font-sans pb-24 lg:pb-10">
-            <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
+        <div className="min-h-screen bg-gray-50/50 py-10 px-4 sm:px-6 lg:px-8 font-sans">
+            <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header Section */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Newsletter Editor</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Newsletter Editor</h1>
                         <p className="text-sm text-gray-500 mt-1">Manage and update your newsletter content.</p>
                     </div>
 
@@ -321,9 +344,9 @@ export default function NewsletterEditorPage() {
 
                 {/* Main Form Area */}
                 {!searching && newsletter && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Left Column: Content & Metadata (2/3 width) */}
-                        <div className="lg:col-span-2 space-y-6 lg:space-y-8">
+                        <div className="lg:col-span-2 space-y-8">
 
                             {/* Section: Basic Info */}
                             <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -359,7 +382,7 @@ export default function NewsletterEditorPage() {
                                             value={formData.content || ''}
                                             onChange={(value) => handleInputChange('content', value)}
                                             modules={modules}
-                                            className="h-80 sm:h-96 mb-12"
+                                            className="h-96 mb-12"
                                         />
                                     </div>
                                 </div>
@@ -479,8 +502,24 @@ export default function NewsletterEditorPage() {
                                         </div>
                                     </div>
 
+                                    {/* Model Selection */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Select Model</label>
+                                        <select
+                                            value={selectedModel}
+                                            onChange={(e) => setSelectedModel(e.target.value)}
+                                            className="input-field-premium w-full border border-gray-200"
+                                            disabled={showTtsClone}
+                                        >
+                                            {MODEL_OPTIONS.map((model) => (
+                                                <option key={model.value} value={model.value}>
+                                                    {model.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-
+                                    {/* Voice Selection */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Select Voice</label>
                                         <select
@@ -500,6 +539,33 @@ export default function NewsletterEditorPage() {
                                             ))}
                                         </select>
                                         {showTtsClone && <p className="text-xs text-orange-500 mt-1">Voice selection is disabled when using Voice Cloning.</p>}
+                                    </div>
+
+                                    {/* Advanced Params: Speed & Emotion */}
+                                    <div className='grid grid-cols-2 gap-4'>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Speed</label>
+                                            <input
+                                                type="number"
+                                                step="0.05"
+                                                min="0.5"
+                                                max="2.0"
+                                                value={ttsSpeed}
+                                                onChange={(e) => setTtsSpeed(e.target.value)}
+                                                className="input-field-premium w-full border border-gray-200"
+                                                placeholder="1.05"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Emotion Prompt</label>
+                                            <textarea
+                                                rows={2}
+                                                value={ttsEmotionPrompt}
+                                                onChange={(e) => setTtsEmotionPrompt(e.target.value)}
+                                                className="input-field-premium w-full border border-gray-200 text-xs"
+                                                placeholder="e.g. Respond softly..."
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="bg-white/50 p-4 rounded-lg border border-purple-100">
@@ -568,8 +634,8 @@ export default function NewsletterEditorPage() {
                             </section>
 
                             {/* Actions Card */}
-                            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50 lg:relative lg:bottom-auto lg:left-auto lg:right-auto lg:border lg:border-indigo-100 lg:rounded-xl lg:shadow-lg lg:p-6 lg:sticky lg:top-6 lg:z-10">
-                                <h3 className="hidden lg:block text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Actions</h3>
+                            <div className="bg-white rounded-xl shadow-lg border border-indigo-100 p-6 sticky top-6 z-10">
+                                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Actions</h3>
                                 <button
                                     type="button"
                                     onClick={() => handleSave()}
@@ -579,7 +645,7 @@ export default function NewsletterEditorPage() {
                                     {loading ? 'Saving Changes...' : 'Save All Changes'}
                                 </button>
                                 {success && (
-                                    <div className="mt-4 lg:mt-4 absolute lg:static top-[-60px] left-4 right-4 lg:top-auto lg:left-auto lg:right-auto p-3 bg-green-50 text-green-700 rounded-lg text-sm text-center font-medium animate-fade-in shadow-lg lg:shadow-none border border-green-100 lg:border-none">
+                                    <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm text-center font-medium animate-fade-in">
                                         {success}
                                     </div>
                                 )}
@@ -591,7 +657,7 @@ export default function NewsletterEditorPage() {
             </div >
             <style jsx>{`
             .input-field-premium {
-                @apply mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:bg-white text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base sm:text-sm p-3 transition-colors duration-200 border;
+                @apply mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:bg-white text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 transition-colors duration-200 border;
             }
             .input-field-premium:focus {
                 @apply ring-2 ring-indigo-500/20 border-indigo-500;
@@ -600,3 +666,4 @@ export default function NewsletterEditorPage() {
         </div >
     );
 }
+

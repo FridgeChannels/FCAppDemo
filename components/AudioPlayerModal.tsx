@@ -61,40 +61,25 @@ export const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
         }}
       >
         <div className="flex flex-col">
-          {/* Artwork placeholder - using a gradient/pattern to represent the collage */}
-          <div className="w-full aspect-[4/3] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
-            {/* Grid pattern background */}
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-              backgroundSize: '20px 20px'
-            }}></div>
-            
-            {/* Placeholder for collage elements - in real implementation, this would be the actual image */}
-            <div className="absolute right-0 bottom-0 w-full h-full flex items-center justify-center px-2">
-              <div className="text-white text-[10px] sm:text-xs opacity-50 text-center break-words">Photo-illustration by Fernando Pino</div>
-            </div>
-          </div>
+          <div className="flex flex-col">
+            {/* Artwork placeholder - REMOVED as per user request */}
 
-          {/* Article info */}
-          <div className="px-3 sm:px-4 py-3 sm:py-4">
-            <div className="overflow-hidden mb-1 relative" style={{ height: '1.5em' }}>
-              <h1 
-                className="text-xl sm:text-2xl font-bold whitespace-nowrap absolute" 
-                style={{ 
-                  fontFamily: 'Georgia, serif',
-                  animation: newsletterTitle && newsletterTitle.replace(/\n/g, ' ').length > 40 ? 'scroll-text 15s linear infinite' : 'none'
-                }}
+            {/* Article info */}
+            <div className="px-8 pt-10 pb-12 text-center">
+              <h1
+                className="text-2xl sm:text-3xl font-bold leading-tight mb-4 text-gray-900"
+                style={{ fontFamily: 'Georgia, serif' }}
               >
-                {newsletterTitle ? newsletterTitle.replace(/\n/g, ' ') : 'How Elon Musk Ate NASA'}
+                {newsletterTitle || 'How Elon Musk Ate NASA'}
               </h1>
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-widest" style={{ fontFamily: 'Inter, sans-serif' }}>
+                By {newsletterAuthor || mockArticle.author}
+              </p>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 break-words" style={{ fontFamily: 'Georgia, serif' }}>
-              By {newsletterAuthor || mockArticle.author}
-            </p>
           </div>
 
           {/* Audio playback controls */}
-          <div className="px-3 sm:px-4 pb-4 sm:pb-6">
+          <div className="px-6 pb-8">
             {/* Progress bar */}
             <div className="mb-3 sm:mb-4">
               <div className="h-1 bg-gray-200 rounded-full relative">
@@ -141,12 +126,12 @@ export const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
               >
                 {isPlaying ? (
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="sm:w-16 sm:h-16">
-                    <rect x="8" y="6" width="3" height="12" fill="#1F2937"/>
-                    <rect x="13" y="6" width="3" height="12" fill="#1F2937"/>
+                    <rect x="8" y="6" width="3" height="12" fill="#1F2937" />
+                    <rect x="13" y="6" width="3" height="12" fill="#1F2937" />
                   </svg>
                 ) : (
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="sm:w-16 sm:h-16">
-                    <path d="M8 5V19L19 12L8 5Z" fill="#1F2937"/>
+                    <path d="M8 5V19L19 12L8 5Z" fill="#1F2937" />
                   </svg>
                 )}
               </button>
@@ -173,7 +158,7 @@ export const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
             </div>
 
             {/* Full Issue button */}
-            <button 
+            <button
               className="w-full bg-red-600 text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-none font-bold text-lg sm:text-xl hover:bg-red-700 transition-colors touch-manipulation mt-4 sm:mt-6 font-atlantic-condensed flex items-center justify-center gap-2 h-[41px]"
               style={{ fontFamily: 'Atlantic Condensed, Georgia, serif' }}
               onClick={(e) => {
@@ -185,7 +170,7 @@ export const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
             >
               <span>View Full Issue</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="sm:w-6 sm:h-6">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
 

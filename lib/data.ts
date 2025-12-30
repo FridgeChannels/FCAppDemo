@@ -7,10 +7,29 @@ import { NewsletterData, RichTextElement } from './types/notion';
  * @param templateKey - The template key value to search for
  * @returns Newsletter data or null if not found
  */
-export async function getNewsletterById(templateKey: string): Promise<NewsletterData | null> {
-    const { data, error } = await supabase
+export async function getNewsletterById(templateKey: string, options: { excludeContent?: boolean; excludePrompts?: boolean } = {}): Promise<NewsletterData | null> {
+    const { excludeContent = false, excludePrompts = false } = options;
+
+    // Define columns to select based on options to optimize DB fetch
+    // Always select core fields
+    let selectColumns = [
+        'id', 'template_key', 'title', 'author', 'time',
+        'annual_price', 'monthly_price', 'cta_text',
+        'benefits', 'consume', 'tts_url'
+    ];
+
+    // Conditionally add heavy/private fields
+    if (!excludeContent) {
+        selectColumns.push('content');
+    }
+    if (!excludePrompts) {
+        selectColumns.push('benefits_prompt');
+        selectColumns.push('consume_prompt');
+    }
+
+    const { data: rawData, error } = await supabase
         .from('newsletters')
-        .select('*')
+        .select(selectColumns.join(','))
         .eq('template_key', templateKey)
         .single();
 
@@ -22,15 +41,17 @@ export async function getNewsletterById(templateKey: string): Promise<Newsletter
         throw error;
     }
 
+    const data = rawData as any;
+
     // Map to NewsletterData
     return {
         id: data.id,
         templateKey: data.template_key,
         title: data.title || '',
         author: data.author || '',
-        content: data.content || '', // This is HTML
+        content: excludeContent ? '' : (data.content || ''), // Omit content if requested
         // Wrap HTML in a "RichTextElement" so the frontend renderer detects it as HTML and renders it directly
-        contentRichText: [{
+        contentRichText: excludeContent ? [] : [{
             type: 'text',
             text: { content: data.content || '', link: null },
             annotations: { bold: false, italic: false, strikethrough: false, underline: false, code: false, color: 'default' },
@@ -44,8 +65,8 @@ export async function getNewsletterById(templateKey: string): Promise<Newsletter
         benefits: data.benefits || [],
         consume: data.consume || '',
         ttsUrl: data.tts_url || undefined,
-        benefitsPrompt: data.benefits_prompt || '',
-        consumePrompt: data.consume_prompt || ''
+        benefitsPrompt: excludePrompts ? '' : (data.benefits_prompt || ''),
+        consumePrompt: excludePrompts ? '' : (data.consume_prompt || '')
     };
 }
 

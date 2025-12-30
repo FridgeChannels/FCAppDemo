@@ -3,10 +3,17 @@ import { getNewsletterById } from '@/lib/data';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
     try {
-        const { id } = await params;
+        // Handle both sync and async params
+        const resolvedParams = await Promise.resolve(params);
+        const { id } = resolvedParams;
+
+        // Get query parameters for partial fetching
+        const url = new URL(request.url);
+        const isBasic = url.searchParams.get('basic') === 'true';
+        const excludePrompts = url.searchParams.get('excludePrompts') === 'true';
 
         if (!id) {
             return NextResponse.json(
@@ -15,7 +22,7 @@ export async function GET(
             );
         }
 
-        const newsletter = await getNewsletterById(id);
+        const newsletter = await getNewsletterById(id, { excludeContent: isBasic, excludePrompts });
 
         if (!newsletter) {
             return NextResponse.json(

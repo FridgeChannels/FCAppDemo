@@ -34,48 +34,85 @@ export async function POST(request: NextRequest) {
 
         const voice = formData.get('voice') as string;
 
+        // Extract additional parameters
+        const speed = formData.get('speed');
+        const gain = formData.get('gain');
+        const sampleRate = formData.get('sample_rate');
+        const emotionPrompt = formData.get('emotion_prompt');
+        const shouldUsePromptForEmotion = formData.get('should_use_prompt_for_emotion') === 'true';
+
         // Determine model from voice if possible
         let finalModel = model;
-        if (voice && voice.includes(':')) {
+        // Only extract model from voice if it's NOT a custom voice (speech:...)
+        if (voice && voice.includes(':') && !voice.startsWith('speech:')) {
             finalModel = voice.split(':')[0];
         }
+
+        console.log(`[TTS Debug] Received. Model=${model}, Voice=${voice}, FinalModel=${finalModel}`);
 
         // Determine voice and request body
         let requestBody: any = {
             model: finalModel,
             input: text,
-            response_format: 'wav',
+            response_format: 'mp3', // Changed to mp3 to match doc example for CosyVoice2
         };
 
+        // Add optional parameters if present
+        if (speed) requestBody.speed = parseFloat(speed as string);
+        if (gain) requestBody.gain = parseFloat(gain as string);
+        if (sampleRate) requestBody.sample_rate = parseInt(sampleRate as string);
+        if (emotionPrompt) requestBody.emotion_prompt = emotionPrompt;
+        if (shouldUsePromptForEmotion) requestBody.should_use_prompt_for_emotion = shouldUsePromptForEmotion;
+
         if (referenceAudio) {
-            // Voice Cloning
+            // Voice Cloning - Step 1: Upload Voice (Base64 JSON method)
+            console.log("Starting Voice Cloning Upload (Base64)...");
+
             const arrayBuffer = await referenceAudio.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
             const base64Audio = buffer.toString('base64');
-            const mimeType = referenceAudio.type || 'audio/wav';
-            const dataUri = `data:${mimeType};base64,${base64Audio}`;
+            const mimeType = referenceAudio.type || 'audio/mpeg'; // Default to mp3 if unknown, or match file
+            // Ensure the data URI is correct. User example: "data:audio/mpeg;base64,..."
+            const audioDataUri = `data:${mimeType};base64,${base64Audio}`;
 
-            requestBody.voice = ""; // specific for cloning? or maybe just omit?
-            // If cloning, we might not want to override model with voice's model unless necessary?
-            // Actually, for cloning, the model passed in formData (default fish-speech-1.5) is probably correct.
-            // But if the user selected a voice AND clicked clone (which is disabled in UI), we should be careful.
-            // In UI, if showTtsClone is true, voice selection is disabled.
-            // But let's keep logic safe.
-            requestBody.model = model; // use original model param for cloning (default fish-speech)
-
-            requestBody.extra_body = {
-                references: [
-                    {
-                        audio: dataUri,
-                        text: referenceText || "Placeholder text if needed"
-                    }
-                ]
+            const uploadPayload = {
+                model: finalModel, // Changed to use the user-selected model
+                customName: `voice-${uuidv4()}`,
+                audio: audioDataUri,
+                text: referenceText || "Placeholder text for voice cloning"
             };
+
+            // Sync model for generation
+            // requestBody.model = 'FunAudioLLM/CosyVoice2-0.5B';
+
+            const uploadResponse = await fetch("https://api.siliconflow.com/v1/uploads/audio/voice", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${SILICONFLOW_API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(uploadPayload)
+            });
+
+            if (!uploadResponse.ok) {
+                const errText = await uploadResponse.text();
+                console.error("Voice Upload Failed:", errText);
+                throw new Error(`Voice Upload Failed: ${errText}`);
+            }
+
+            const uploadData = await uploadResponse.json();
+            console.log("Voice Uploaded, URI:", uploadData.uri);
+
+            // Step 2: Use URI for generation
+            requestBody.voice = uploadData.uri;
+
         } else {
             // System Voice
             // Use provided voice or default to Charles
             requestBody.voice = voice || "fishaudio/fish-speech-1.5:charles";
         }
+
+        console.log("Sending Generation Request:", JSON.stringify(requestBody, null, 2));
 
         // Call SiliconFlow API
         const response = await fetch(API_URL, {
@@ -103,14 +140,14 @@ export async function POST(request: NextRequest) {
         const audioBuffer = await response.arrayBuffer();
 
         // Upload to S3
-        const filename = `${uuidv4()}.wav`;
+        const filename = `${uuidv4()}.mp3`; // Changed extension to mp3
         const key = `audio/${filename}`;
 
         const uploadCommand = new PutObjectCommand({
             Bucket: S3_BUCKET_NAME,
             Key: key,
             Body: Buffer.from(audioBuffer),
-            ContentType: 'audio/wav',
+            ContentType: 'audio/mpeg', // Changed content type
             // ACL: 'public-read' // Not strictly required if bucket policy is public, but good for explicit access if allowed. 
             // Many modern buckets block ACLs. Assuming bucket is configured for public access or we use standard URL.
         });
