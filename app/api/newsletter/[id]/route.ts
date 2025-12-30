@@ -3,12 +3,10 @@ import { getNewsletterById } from '@/lib/data';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> | { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        // Handle both sync and async params
-        const resolvedParams = await Promise.resolve(params);
-        const { id } = resolvedParams;
+        const { id } = await params;
 
         // Get query parameters for partial fetching
         const url = new URL(request.url);
