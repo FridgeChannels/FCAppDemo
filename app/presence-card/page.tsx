@@ -1,946 +1,228 @@
 'use client';
 
-// 名片页面 - 基于 app/[id]/page.tsx 的功能，使用静态数据
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { AudioPlayerModal } from "@/components/AudioPlayerModal";
-import { SubscriptionModal } from "@/components/SubscriptionModal";
-import dynamic from 'next/dynamic';
-import { slugify } from '@/lib/slug';
-import { NewsletterData, RichTextElement } from '@/lib/types/notion';
+import { motion } from 'framer-motion';
+import { RippleTrigger } from '../components/nfc/RippleTrigger';
+import { IdentityLogo } from '../components/nfc/IdentityLogo';
+import { PresenceCard } from '../components/nfc/PresenceCard';
+import { AudioTheater } from '../components/nfc/AudioTheater';
+import { DepthReading } from '../components/nfc/DepthReading';
+import { CuratorCTA } from '../components/nfc/CuratorCTA';
+import { SwipeIndicator } from '../components/nfc/SwipeIndicator'; // Restored
 
-// Dynamically import RichTextRenderer with SSR disabled to avoid hydration issues
-const RichTextRenderer = dynamic(
-  () => import('@/components/RichTextRenderer').then(mod => ({ default: mod.RichTextRenderer })),
-  { ssr: false }
-);
+// Phases of the animation
+// idle -> triggered -> reveal -> presence -> transition -> active
+type AnimationPhase = 'idle' | 'triggered' | 'reveal' | 'presence' | 'transition' | 'active';
 
-// 静态数据 - 名片
-const staticNewsletterData: NewsletterData = {
-  id: 'presence-card-1',
-  templateKey: 'presence-card',
-  title: '数字名片\n连接未来\n商务社交',
-  author: 'Presence Card',
-  // 个人信息数据
-  personInfo: {
-    name: 'John Smith',
-    title: 'Senior Real Estate Advisor',
-    company: 'Briggs Freeman Sotheby\'s',
-    location: 'Dallas, TX'
-  } as any,
-  content: '<p>数字名片是未来商务社交的新方式。通过数字名片，您可以轻松分享联系信息、社交媒体链接、公司介绍等，让商务交流更加高效便捷。</p><p>我们的数字名片平台支持多种展示方式，包括二维码、链接分享、NFC触碰等。无论您身在何处，都能快速建立商务联系。</p><h2>核心功能</h2><p>数字名片不仅包含传统的联系信息，还支持多媒体内容展示。您可以添加个人照片、公司Logo、产品介绍视频等，让您的名片更加生动有趣。</p><h2>使用场景</h2><ul><li>商务会议 - 快速交换联系方式，无需纸质名片</li><li>展会活动 - 通过二维码快速收集潜在客户信息</li><li>线上社交 - 在社交媒体和邮件签名中分享数字名片</li><li>团队协作 - 统一管理团队成员的数字名片</li></ul>',
-  contentRichText: [
-    {
-      type: 'text',
-      text: { content: '<p>数字名片是未来商务社交的新方式。通过数字名片，您可以轻松分享联系信息、社交媒体链接、公司介绍等，让商务交流更加高效便捷。</p><p>我们的数字名片平台支持多种展示方式，包括二维码、链接分享、NFC触碰等。无论您身在何处，都能快速建立商务联系。</p><h2>核心功能</h2><p>数字名片不仅包含传统的联系信息，还支持多媒体内容展示。您可以添加个人照片、公司Logo、产品介绍视频等，让您的名片更加生动有趣。</p><h2>使用场景</h2><ul><li>商务会议 - 快速交换联系方式，无需纸质名片</li><li>展会活动 - 通过二维码快速收集潜在客户信息</li><li>线上社交 - 在社交媒体和邮件签名中分享数字名片</li><li>团队协作 - 统一管理团队成员的数字名片</li></ul>', link: null },
-      annotations: { bold: false, italic: false, strikethrough: false, underline: false, code: false, color: 'default' },
-      plain_text: '数字名片是未来商务社交的新方式。通过数字名片，您可以轻松分享联系信息、社交媒体链接、公司介绍等，让商务交流更加高效便捷。我们的数字名片平台支持多种展示方式，包括二维码、链接分享、NFC触碰等。无论您身在何处，都能快速建立商务联系。核心功能：数字名片不仅包含传统的联系信息，还支持多媒体内容展示。您可以添加个人照片、公司Logo、产品介绍视频等，让您的名片更加生动有趣。使用场景：商务会议 - 快速交换联系方式，无需纸质名片；展会活动 - 通过二维码快速收集潜在客户信息；线上社交 - 在社交媒体和邮件签名中分享数字名片；团队协作 - 统一管理团队成员的数字名片。',
-      href: null
-    }
-  ],
-  time: '2025年1月',
-  annualPrice: '¥300/年',
-  monthlyPrice: '¥30/月',
-  ctaText: '查看完整内容',
-  benefits: [
-    '无限次数字名片创建和分享',
-    '自定义名片设计和品牌展示',
-    '详细的访问统计和分析报告',
-    '多平台同步和云端存储'
-  ],
-  consume: '数字名片是未来商务社交的新方式。通过数字名片，您可以轻松分享联系信息、社交媒体链接、公司介绍等，让商务交流更加高效便捷。我们的数字名片平台支持多种展示方式，包括二维码、链接分享、NFC触碰等。无论您身在何处，都能快速建立商务联系。',
-  ttsUrl: undefined
-};
+export default function NFCPage() {
+  const [phase, setPhase] = useState<AnimationPhase>('idle');
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [yOffset, setYOffset] = useState(0); // For Swipe Drag
+  const [isPlaying, setIsPlaying] = useState(false); // Main Audio State
 
-export default function PresenceCard() {
-  const router = useRouter();
-  const newsletter = staticNewsletterData;
-
-  // Screen1 functionality states
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [showAudioPlayer, setShowAudioPlayer] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [showArticleContent, setShowArticleContent] = useState(false);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  const [screenHeight, setScreenHeight] = useState(0);
-  const [titleFontSizes, setTitleFontSizes] = useState<{ [key: number]: number }>({});
-  const [ttsText, setTtsText] = useState<string>('');
-  const [isPlayingTTS, setIsPlayingTTS] = useState(false);
-  const [ttsTitle, setTtsTitle] = useState<string>('');
-  const [ttsProgress, setTtsProgress] = useState(0);
-  const [ttsCurrentTime, setTtsCurrentTime] = useState(0);
-  const [ttsDuration, setTtsDuration] = useState(0);
-  const [newsletterTitle, setNewsletterTitle] = useState<string>(newsletter.title);
-  const [showPlaybackControls, setShowPlaybackControls] = useState(true);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const titleRefs = useRef<{ [key: number]: HTMLHeadingElement | null }>({});
-  const isScrollingRef = useRef(false);
-  const touchStartYRef = useRef(0);
-  const touchEndYRef = useRef(0);
-  const isTouchingRef = useRef(false);
-  const currentIndexRef = useRef(currentIndex);
-  const synthRef = useRef<SpeechSynthesis | null>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioUnlockedRef = useRef(false);
-  const [showAudioUnlockPrompt, setShowAudioUnlockPrompt] = useState(false);
-  const [showContactModal, setShowContactModal] = useState(false);
-  const [showWelcomePage, setShowWelcomePage] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Create article array from static data
-  const articles = [{
-    id: 1,
-    title: newsletter.title,
-    author: newsletter.author,
-    readMinutes: 5,
-    date: newsletter.time,
-    category: 'Newsletter',
-    benefits: newsletter.benefits,
-    audioTitle: newsletter.title,
-    audioProgress: 0
-  }];
+  // Simulated Haptic Feedback
+  const triggerHaptic = () => {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(20);
+    }
+  };
 
-  const currentArticle = articles.length > 0 ? articles[currentIndex] : null;
-
-  // Keep currentIndexRef in sync with currentIndex
+  // Auto-trigger on mount
   useEffect(() => {
-    currentIndexRef.current = currentIndex;
-  }, [currentIndex]);
-
-  // Calculate actual screen height dynamically
-  useEffect(() => {
-    const updateHeight = () => {
-      const height = window.innerHeight;
-      setScreenHeight(height);
-    };
-
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-    window.addEventListener('orientationchange', updateHeight);
-
-    return () => {
-      window.removeEventListener('resize', updateHeight);
-      window.removeEventListener('orientationchange', updateHeight);
-    };
+    const initialDelay = setTimeout(() => {
+      handleTriggerSequence();
+    }, 500);
+    return () => clearTimeout(initialDelay);
   }, []);
 
-  // Reset font sizes on window resize
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  const handleTriggerSequence = () => {
+    if (phase !== 'idle') return;
 
-    const handleResize = () => {
-      setTitleFontSizes({});
-    };
+    triggerHaptic();
+    setPhase('triggered');
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleResize);
+    // 0ms: Triggered (Ripple)
+    // 300ms: Reveal Logo -> THEN WAIT FOR SWIPE
+    setTimeout(() => setPhase('reveal'), 300);
+  };
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
-    };
-  }, []);
+  const handleSwipeComplete = () => {
+    setPhase('presence'); // Transition to Digital Presence
+    triggerHaptic();
+  }
 
-  // Adjust title font size to fit within 4 lines
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  const handlePresenceComplete = () => {
+    // Presence card slides up (handled by component)
+    setPhase('transition');
 
-    const adjustTitleFontSize = (articleId: number) => {
-      const titleElement = titleRefs.current[articleId];
-      if (!titleElement) return;
-
-      const hasContent = titleElement.textContent && titleElement.textContent.trim().length > 0;
-      if (!hasContent) {
-        setTimeout(() => {
-          adjustTitleFontSize(articleId);
-        }, 100);
-        return;
+    // 800ms: Active (Audio Theater) - Sync with Presence slide-up duration
+    setTimeout(() => {
+      setPhase('active');
+      // Start main content audio
+      if (audioRef.current) {
+        audioRef.current.play().catch(() => { });
+        setIsPlaying(true);
       }
+    }, 800);
+  }
 
-      titleElement.style.visibility = 'hidden';
-      titleElement.style.opacity = '0';
-
-      const baseSize = window.innerWidth >= 640 ? 40 : 35;
-      let fontSize = baseSize;
-      titleElement.style.fontSize = `${fontSize}pt`;
-
-      const calculateOptimalSize = () => {
-        titleElement.offsetHeight;
-
-        const computedStyle = window.getComputedStyle(titleElement);
-        const lineHeightValue = computedStyle.lineHeight;
-        const lineHeight = lineHeightValue === 'normal'
-          ? fontSize * 1.2
-          : parseFloat(lineHeightValue);
-
-        const maxHeight = lineHeight * 4;
-        let actualHeight = titleElement.scrollHeight;
-
-        while (actualHeight > maxHeight && fontSize > 20) {
-          fontSize -= 1;
-          titleElement.style.fontSize = `${fontSize}pt`;
-          titleElement.offsetHeight;
-          actualHeight = titleElement.scrollHeight;
-        }
-
-        setTitleFontSizes(prev => ({ ...prev, [articleId]: fontSize }));
-        titleElement.style.visibility = 'visible';
-        titleElement.style.opacity = '1';
-      };
-
-      setTimeout(() => {
-        calculateOptimalSize();
-      }, 50);
-    };
-
-    const currentArticle = articles[currentIndex];
-    if (currentArticle) {
-      if (currentIndex === 0 && !newsletterTitle) {
-        setTimeout(() => {
-          adjustTitleFontSize(currentArticle.id);
-        }, 200);
-      } else {
-        adjustTitleFontSize(currentArticle.id);
-      }
-    }
-  }, [currentIndex, screenHeight, newsletterTitle]);
-
-  const handleViewFullIssue = () => {
-    if (isSubscribed) {
-      setShowArticleContent(true);
-    } else {
-      setShowSubscriptionModal(true);
-    }
-  };
-
-  const handleSubscribe = async () => {
-    setIsSubscribed(true);
-    setShowSubscriptionModal(false);
-    setShowArticleContent(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowSubscriptionModal(false);
-  };
-
-  const handleBackToMagnet = () => {
-    setShowArticleContent(false);
-  };
-
-  const handlePlaybackClick = () => {
-    setShowAudioPlayer(true);
-  };
-
-  const handleCloseAudioPlayer = () => {
-    setShowAudioPlayer(false);
-  };
-
-  const handleContactClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowContactModal(true);
-  };
-
-  const handleCloseContactModal = () => {
-    setShowContactModal(false);
-  };
-
-  // Handle explicit audio unlock tap - iOS Safari requires this
-  const handleAudioUnlockTap = () => {
-    const audio = audioRef.current;
-    if (!audio) {
-      audioUnlockedRef.current = true;
-      setShowAudioUnlockPrompt(false);
-      if (newsletter?.consume && !newsletter.ttsUrl) {
-        startTTSPlayback(newsletter.consume);
-      }
-      return;
-    }
-
-    audio.play().then(() => {
-      audioUnlockedRef.current = true;
-      setShowAudioUnlockPrompt(false);
-      setIsPlayingTTS(true);
-      setShowPlaybackControls(true);
-    }).catch(err => {
-      console.error('Audio unlock failed:', err);
-      audioUnlockedRef.current = true;
-      setShowAudioUnlockPrompt(false);
-    });
-  };
-
-  // Initialize Audio logic when component mounts
-  useEffect(() => {
-    if (!newsletter) return;
-
-    stopTTSPlayback();
-    setTtsTitle(newsletter.title.split('\n')[0]);
-
-    // Priority 1: S3 Audio URL
-    if (newsletter.ttsUrl) {
-      setTtsText("Audio available");
-      setShowPlaybackControls(true);
-
-      if (audioUnlockedRef.current && audioRef.current) {
-        audioRef.current.play().then(() => {
-          setIsPlayingTTS(true);
-        }).catch(() => {
-          setShowAudioUnlockPrompt(true);
-          setIsPlayingTTS(false);
-        });
-      } else {
-        setShowAudioUnlockPrompt(true);
-        setIsPlayingTTS(false);
-      }
-      return;
-    }
-
-    // Priority 2: TTS (Web Speech API) Fallback
-    if (newsletter.consume) {
-      setTtsText(newsletter.consume);
-
-      if (audioUnlockedRef.current) {
-        setTimeout(() => {
-          startTTSPlayback(newsletter.consume);
-        }, 500);
-      } else {
-        setShowAudioUnlockPrompt(true);
-        setShowPlaybackControls(true);
-      }
-    }
-  }, [newsletter]);
-
-  // Start Playback (Unified)
-  const startTTSPlayback = (textSource: string, startTime: number = 0) => {
-    // Mode A: Audio URL
-    if (newsletter?.ttsUrl && audioRef.current) {
-      const audio = audioRef.current;
-      audio.currentTime = startTime;
-      audio.play().then(() => {
-        setIsPlayingTTS(true);
-        setShowPlaybackControls(true);
-      }).catch(err => {
-        console.error("Audio playback error:", err);
-        if (err.name === 'NotAllowedError') {
-          setIsPlayingTTS(false);
-          setShowPlaybackControls(true);
-        }
-      });
-      return;
-    }
-
-    // Mode B: Web Speech API (Fallback)
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      console.error('Speech synthesis not supported');
-      return;
-    }
-
-    if (synthRef.current) {
-      synthRef.current.cancel();
-    }
-
-    synthRef.current = window.speechSynthesis;
-    const utterance = new SpeechSynthesisUtterance(textSource);
-    utterance.lang = 'zh-CN';
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    utterance.onstart = () => {
-      setIsPlayingTTS(true);
-      setShowPlaybackControls(true);
-
-      const fullDuration = ttsText.length / 10;
-      const remainingDuration = textSource.length / 10;
-      setTtsDuration(fullDuration);
-
-      const interval = 100;
-      let elapsed = startTime;
-
-      progressIntervalRef.current = setInterval(() => {
-        elapsed += interval / 1000;
-        const progress = Math.min((elapsed / fullDuration) * 100, 100);
-        setTtsProgress(progress);
-        setTtsCurrentTime(elapsed);
-      }, interval);
-    };
-
-    utterance.onend = () => {
-      setIsPlayingTTS(false);
-      setTtsProgress(100);
-      setTtsCurrentTime(ttsDuration);
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-    };
-
-    utterance.onerror = (error) => {
-      console.error('TTS error:', error);
-      setIsPlayingTTS(false);
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-    };
-
-    utteranceRef.current = utterance;
-    synthRef.current.speak(utterance);
-  };
-
-  // Toggle Playback (Unified)
-  const toggleTTSPlayback = () => {
-    if (newsletter?.ttsUrl && audioRef.current) {
-      if (isPlayingTTS) {
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
         audioRef.current.pause();
-        setIsPlayingTTS(false);
       } else {
         audioRef.current.play();
-        setIsPlayingTTS(true);
-        setShowPlaybackControls(true);
       }
-      return;
-    }
-
-    if (!synthRef.current || !utteranceRef.current) return;
-
-    if (isPlayingTTS) {
-      synthRef.current.pause();
-      setIsPlayingTTS(false);
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-    } else {
-      synthRef.current.resume();
-      setIsPlayingTTS(true);
-      setShowPlaybackControls(true);
+      setIsPlaying(!isPlaying);
     }
   };
 
-  // Stop Playback (Unified)
-  const stopTTSPlayback = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-
-    if (synthRef.current) {
-      synthRef.current.cancel();
-    }
-
-    setIsPlayingTTS(false);
-    setTtsProgress(0);
-    setTtsCurrentTime(0);
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = null;
-    }
-  };
-
-  // Seek forward 15 seconds (Unified)
-  const seekForward15 = () => {
-    if (newsletter?.ttsUrl && audioRef.current) {
-      audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 15, audioRef.current.duration);
-      return;
-    }
-
-    if (!ttsText || !synthRef.current) return;
-
-    const wasPlaying = isPlayingTTS;
-    const currentTime = ttsCurrentTime;
-    const duration = ttsDuration || (ttsText.length / 10);
-    const newTime = Math.min(currentTime + 15, duration);
-
-    const newProgress = (newTime / duration) * 100;
-    setTtsCurrentTime(newTime);
-    setTtsProgress(newProgress);
-
-    if (wasPlaying && newTime < duration) {
-      const charsPerSecond = ttsText.length / duration;
-      const startChar = Math.floor(newTime * charsPerSecond);
-      const remainingText = ttsText.substring(startChar);
-
-      synthRef.current.cancel();
-      setIsPlayingTTS(false);
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-
-      setTimeout(() => {
-        startTTSPlayback(remainingText, newTime);
-      }, 100);
-    }
-  };
-
-  // Seek backward 15 seconds (Unified)
-  const seekBackward15 = () => {
-    if (newsletter?.ttsUrl && audioRef.current) {
-      audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 15, 0);
-      return;
-    }
-
-    if (!ttsText || !synthRef.current) return;
-
-    const wasPlaying = isPlayingTTS;
-    const currentTime = ttsCurrentTime;
-    const duration = ttsDuration || (ttsText.length / 10);
-    const newTime = Math.max(currentTime - 15, 0);
-
-    const newProgress = (newTime / duration) * 100;
-    setTtsCurrentTime(newTime);
-    setTtsProgress(newProgress);
-
-    if (wasPlaying && newTime >= 0) {
-      const charsPerSecond = ttsText.length / duration;
-      const startChar = Math.floor(newTime * charsPerSecond);
-      const remainingText = ttsText.substring(startChar);
-
-      synthRef.current.cancel();
-      setIsPlayingTTS(false);
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-
-      setTimeout(() => {
-        startTTSPlayback(remainingText, newTime);
-      }, 100);
-    }
-  };
-
-  // Format time as MM:SS
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Cleanup on unmount
+  // Preload Main Audio & Event Listeners
   useEffect(() => {
+    const audio = new Audio('https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/6d5d4873-60ee-474f-b98e-64ec17b704bc.mp3');
+    audio.loop = false; // Main content usually doesn't loop
+    audio.volume = 0;
+    audioRef.current = audio;
+
+    const handleTimeUpdate = () => {
+      if (audio.duration) {
+        setAudioProgress(audio.currentTime / audio.duration);
+      }
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
     return () => {
-      if (synthRef.current) {
-        synthRef.current.cancel();
-      }
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
-      }
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+      audio.pause();
     };
   }, []);
 
-  // Touch handlers for mobile swipe
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.fixed.bottom-0')) return;
+  // Volume Fade In (Cross-fade)
+  useEffect(() => {
+    if (phase === 'active' && audioRef.current) {
+      let vol = 0;
+      const interval = setInterval(() => {
+        if (vol < 1) {
+          vol += 0.05;
+          if (audioRef.current) audioRef.current.volume = Math.min(vol, 1);
+        } else {
+          clearInterval(interval);
+        }
+      }, 50); // Faster fade in for content
+      return () => clearInterval(interval);
+    }
+  }, [phase]);
 
-    if (isTouchingRef.current || isScrollingRef.current) return;
-    isTouchingRef.current = true;
-    touchStartYRef.current = e.targetTouches[0].clientY;
-    touchEndYRef.current = e.targetTouches[0].clientY;
+  // Handle Scroll to Reading Section
+  const handleScrollToRead = () => {
+    window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isTouchingRef.current) return;
-    touchEndYRef.current = e.targetTouches[0].clientY;
-  };
+  const showRipple = phase === 'triggered' || phase === 'reveal';
+  const logoState = phase === 'idle' || phase === 'triggered'
+    ? 'hidden'
+    : phase === 'reveal'
+      ? 'reveal'
+      : 'move-up';
 
-  const handleTouchEnd = () => {
-    if (!isTouchingRef.current || isScrollingRef.current) {
-      isTouchingRef.current = false;
-      return;
-    }
+  const showTheater = phase === 'transition' || phase === 'active';
 
-    const startY = touchStartYRef.current;
-    const endY = touchEndYRef.current;
-
-    isTouchingRef.current = false;
-
-    if (!startY || !endY || startY === endY) {
-      touchStartYRef.current = 0;
-      touchEndYRef.current = 0;
-      return;
-    }
-
-    const distance = startY - endY;
-    const minSwipeDistance = 50;
-
-    if (isScrollingRef.current) return;
-
-    if (distance > minSwipeDistance && currentIndex < articles.length - 1) {
-      isScrollingRef.current = true;
-      const nextIndex = currentIndex + 1;
-      setCurrentIndex(nextIndex);
-      setTimeout(() => {
-        isScrollingRef.current = false;
-      }, 600);
-    } else if (distance < -minSwipeDistance && currentIndex > 0) {
-      isScrollingRef.current = true;
-      const prevIndex = currentIndex - 1;
-      setCurrentIndex(prevIndex);
-      setTimeout(() => {
-        isScrollingRef.current = false;
-      }, 600);
-    }
-
-    touchStartYRef.current = 0;
-    touchEndYRef.current = 0;
-  };
+  // Dynamic Background: Deep Blue -> Estate White
+  const bgColor = (phase === 'presence' || phase === 'transition' || phase === 'active') ? '#002349' : '#000000';
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
-      className="bg-white flex flex-col w-full max-w-md mx-auto overflow-hidden relative"
-      style={{ height: screenHeight || '100vh' }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      className="relative w-full min-h-screen bg-black overflow-hidden"
+      animate={{
+        backgroundColor: bgColor
+      }}
+      transition={{ duration: 1.0 }}
     >
-      {/* Welcome Page */}
-      {showWelcomePage ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
-          {/* Avatar */}
-          <div className="flex-shrink-0 w-24 h-24 sm:w-[120px] sm:h-[120px] mb-6">
-            <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center">
-              <span className="text-gray-500 text-2xl sm:text-3xl font-bold">
-                {(newsletter as any).personInfo?.name?.charAt(0) || 'J'}
-              </span>
-            </div>
-          </div>
+      {/* Preload Hints */}
+      <link rel="preload" href="https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/93ec84e3-7921-4d3d-917d-21450d95be12.mp3" as="audio" />
 
-          {/* User Info */}
-          <div className="text-center mb-6">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: '#BD8A52', fontFamily: 'Atlantic Condensed, Georgia, serif' }}>
-              {(newsletter as any).personInfo?.name || 'John Smith'}
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600 mb-1">
-              {(newsletter as any).personInfo?.title || 'Senior Real Estate Advisor'}
-            </p>
-            <p className="text-sm sm:text-base text-gray-500">
-              {(newsletter as any).personInfo?.company || 'Briggs Freeman Sotheby\'s'}
-            </p>
-          </div>
+      {/* Phase 1: Ripple Trigger & Phase 1.5: Logo Swipe Layer */}
+      <div className="fixed inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">
 
-          {/* Introduction */}
-          <div className="text-center mb-8 max-w-md">
-            <p className="text-base sm:text-lg text-gray-700 leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
-              您好！我是 {(newsletter as any).personInfo?.name || 'John Smith'}，很高兴认识您。我专注于房地产咨询领域，致力于为客户提供专业的服务和解决方案。期待与您建立联系，共同探讨合作机会。
-            </p>
-          </div>
-
-          {/* Next Button */}
-          <button
-            onClick={() => setShowWelcomePage(false)}
-            className="w-full max-w-xs bg-[#001E3F] text-white py-3 sm:py-4 px-6 sm:px-8 rounded-none font-bold text-lg sm:text-xl transition-colors touch-manipulation font-atlantic-condensed flex items-center justify-center gap-2 hover:bg-[#002a5c]"
-            style={{ fontFamily: 'Atlantic Condensed, Georgia, serif' }}
-          >
-            <span>下一步</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="sm:w-6 sm:h-6">
-              <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+        {/* Ripple is always behind */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <RippleTrigger isActive={phase === 'triggered'} />
         </div>
-      ) : (
-        <>
-          {/* Conditional rendering: Show article content or magnet view */}
-          {showArticleContent ? (
-        /* Article Content View */
-        <div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-6">
-          <div className="max-w-none w-full pt-3 sm:pt-4">
-            {/* Back button */}
-            <button
-              onClick={handleBackToMagnet}
-              className="mb-3 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-              aria-label="Back to overview"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span className="text-sm sm:text-base">返回</span>
-            </button>
 
-            {/* Article Title */}
-            <h1 className="text-[24pt] sm:text-[28pt] font-bold mb-3 sm:mb-4 leading-tight text-black break-words font-atlantic-condensed" style={{ fontFamily: 'Atlantic Condensed, Georgia, serif' }}>
-              {newsletter.title}
-            </h1>
-
-            {/* Author and Date */}
-            <div className="flex justify-between items-center mb-4 sm:mb-5">
-              <Link
-                href={`/channel/${slugify(newsletter.author)}`}
-                className="text-xs sm:text-sm text-gray-600 hover:underline"
-                style={{ fontFamily: 'Georgia, serif' }}
-              >
-                作者：{newsletter.author}
-              </Link>
-              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'monospace' }}>
-                {newsletter.time}
-              </p>
-            </div>
-
-            {/* Article Content */}
-            <RichTextRenderer richText={newsletter.contentRichText} />
-          </div>
-        </div>
-      ) : (
-        /* Magnet View */
-        <>
-          <div className="flex-1 overflow-hidden relative">
-            <div
-              className="h-full transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateY(-${currentIndex * 100}%)` }}
-            >
-              {articles.map((article, index) => {
-                return (
-                  <div
-                    key={article.id}
-                    className="h-full flex flex-col overflow-hidden"
-                  >
-                    <div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-safe">
-                      <div className="max-w-none w-full pt-3 sm:pt-4 pb-24">
-                        {/* Avatar */}
-                        <div className="flex-shrink-0 w-24 h-24 sm:w-[120px] sm:h-[120px] mx-auto mb-4">
-                          <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center">
-                            <span className="text-gray-500 text-2xl sm:text-3xl font-bold">
-                              {(newsletter as any).personInfo?.name?.charAt(0) || 'J'}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {/* Personal Info Section */}
-                        <div className="flex items-center justify-center mb-4 gap-3 px-2">
-                          {/* Info */}
-                          <div className="text-center">
-                            <h3 className="text-base sm:text-lg font-semibold mb-0.5" style={{ color: '#BD8A52' }}>
-                              {(newsletter as any).personInfo?.name || 'John Smith'}
-                            </h3>
-                            <p className="text-xs sm:text-sm text-gray-600 mb-0.5">
-                              {(newsletter as any).personInfo?.title || 'Senior Real Estate Advisor'}
-                            </p>
-                            <p className="text-xs sm:text-sm text-gray-600 mb-0.5">
-                              {(newsletter as any).personInfo?.company || 'Briggs Freeman Sotheby\'s'}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {(newsletter as any).personInfo?.location || 'Dallas, TX'}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Button */}
-                        <div className="flex justify-end mb-5 sm:mb-8 mt-8 sm:mt-10 -mx-3 sm:-mx-4">
-                          <button
-                            onClick={handleViewFullIssue}
-                            className="text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-none font-bold text-lg sm:text-xl transition-colors touch-manipulation w-full h-[82px] font-atlantic-condensed flex items-center justify-center gap-2"
-                            style={{ fontFamily: 'Atlantic Condensed, Georgia, serif', backgroundColor: '#001E3F' }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#002a5c'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#001E3F'}
-                          >
-                            <span onClick={handleContactClick}>Contact me</span>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="sm:w-6 sm:h-6">
-                              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                              <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </button>
-                        </div>
-
-                        {/* You'll get section */}
-                        <div className="mt-10 sm:mt-14 grid">
-                          <h2 className="text-lg sm:text-xl font-bold text-black mb-3 sm:mb-4 break-words font-atlantic-condensed text-center" style={{ fontFamily: 'Atlantic Condensed, Georgia, serif' }}>
-                            You&apos;ll get:
-                          </h2>
-
-                          <ul className="space-y-2 sm:space-y-2.5 flex flex-col items-center">
-                            {article.benefits.map((benefit, i) => (
-                              <li key={i} className="text-lg sm:text-xl text-black leading-relaxed break-words font-atlantic-condensed text-center" style={{ fontFamily: 'Atlantic Condensed, Georgia, serif' }}>
-                                {benefit}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Bottom playback controls - only show in magnet view - hidden on welcome page */}
-      {showPlaybackControls && !showArticleContent && !showWelcomePage && (
-        <div className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto px-3 sm:px-4 bg-white pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 z-50">
-          <div className="h-0.5 bg-gray-200 mb-2 sm:mb-3">
-            <div
-              className="h-full bg-hark-red transition-all duration-500"
-              style={{ width: `${ttsText ? ttsProgress : (currentArticle?.audioProgress ?? 0)}%` }}
-            ></div>
-          </div>
-          <div className="flex items-center justify-between gap-2 cursor-pointer" onClick={handlePlaybackClick}>
-            <div className="flex-1 mr-2 sm:mr-4 min-w-0 overflow-hidden relative" style={{ height: '1.5em' }}>
-              <h2
-                className="text-sm sm:text-lg font-bold text-black whitespace-nowrap absolute transition-all duration-500"
-                style={{
-                  animation: (ttsText && newsletterTitle && newsletterTitle.replace(/\n/g, ' ').length > 30) ||
-                    (!ttsText && currentArticle?.audioTitle && currentArticle.audioTitle.length > 30)
-                    ? 'scroll-text 15s linear infinite'
-                    : 'none'
-                }}
-              >
-                {ttsText
-                  ? (newsletterTitle ? newsletterTitle.replace(/\n/g, ' ') : ttsTitle)
-                  : (currentArticle?.audioTitle || '加载中...')}
-              </h2>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <button
-                className="p-1.5 sm:p-1 touch-manipulation"
-                aria-label={isPlayingTTS ? 'Pause' : 'Play'}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (ttsText) {
-                    toggleTTSPlayback();
-                  }
-                }}
-              >
-                {isPlayingTTS ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="sm:w-6 sm:h-6">
-                    <rect x="8" y="6" width="3" height="12" fill="#000000" />
-                    <rect x="13" y="6" width="3" height="12" fill="#000000" />
-                  </svg>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="sm:w-6 sm:h-6">
-                    <path d="M6 4L18 12L6 20V4Z" fill="#000000" />
-                  </svg>
-                )}
-              </button>
-              <button
-                className="p-1.5 sm:p-1 touch-manipulation"
-                aria-label="Stop"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (ttsText) {
-                    stopTTSPlayback();
-                    setTtsText('');
-                    setTtsTitle('');
-                    setTtsProgress(0);
-                    setTtsCurrentTime(0);
-                    setTtsDuration(0);
-                    setShowPlaybackControls(false);
-                  }
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="sm:w-6 sm:h-6">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="#000000" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-        </>
-      )}
-
-      {/* Audio Unlock Prompt */}
-      {showAudioUnlockPrompt && !showArticleContent && !showWelcomePage && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          onClick={handleAudioUnlockTap}
-        >
-          <button
-            className="bg-white rounded-2xl px-8 py-6 shadow-2xl flex flex-col items-center gap-4 touch-manipulation active:scale-95 transition-transform"
-            onClick={handleAudioUnlockTap}
-          >
-            <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                <path d="M6 4L18 12L6 20V4Z" fill="white" />
-              </svg>
-            </div>
-            <span className="text-lg font-bold text-gray-900">点击启用音频</span>
-            <span className="text-sm text-gray-500">音频播放需要此操作</span>
-          </button>
-        </div>
-      )}
-
-      {/* Audio Player Modal */}
-      <AudioPlayerModal
-        isOpen={showAudioPlayer}
-        onClose={handleCloseAudioPlayer}
-        onSeekForward={seekForward15}
-        onSeekBackward={seekBackward15}
-        ttsText={ttsText}
-        onViewFullIssue={handleViewFullIssue}
-        newsletterTitle={newsletterTitle}
-        newsletterAuthor={newsletter.author}
-        isPlaying={isPlayingTTS}
-        onTogglePlay={toggleTTSPlayback}
-        progress={ttsProgress}
-        currentTime={ttsCurrentTime}
-        duration={ttsDuration}
-      />
-
-      {/* Subscription Modal */}
-      <SubscriptionModal
-        isOpen={showSubscriptionModal}
-        onClose={handleCloseModal}
-        onSubscribe={handleSubscribe}
-        annualPrice={newsletter.annualPrice}
-        monthlyPrice={newsletter.monthlyPrice}
-      />
-
-      {/* Hidden Audio Element for S3 URL Playback */}
-      {newsletter?.ttsUrl && (
-        <audio
-          ref={audioRef}
-          src={newsletter.ttsUrl}
-          onTimeUpdate={(e) => {
-            const audio = e.currentTarget;
-            if (!Number.isNaN(audio.duration)) {
-              setTtsCurrentTime(audio.currentTime);
-              setTtsDuration(audio.duration);
-              setTtsProgress((audio.currentTime / audio.duration) * 100);
+        {/* Interaction Layer (Only active during reveal) */}
+        <motion.div
+          className="absolute inset-0 z-50 cursor-grab active:cursor-grabbing pointer-events-auto"
+          style={{ display: phase === 'reveal' ? 'block' : 'none' }}
+          drag="y"
+          dragConstraints={{ top: -200, bottom: 0 }}
+          dragElastic={0.2}
+          onDrag={(event, info) => {
+            // Only allow dragging up
+            if (info.offset.y < 0) {
+              setYOffset(info.offset.y);
             }
           }}
-          onEnded={() => {
-            setIsPlayingTTS(false);
-            setTtsProgress(100);
+          onDragEnd={(event, info) => {
+            if (info.offset.y < -100) {
+              handleSwipeComplete();
+            } else {
+              setYOffset(0); // Snap back
+            }
           }}
-          onPause={() => setIsPlayingTTS(false)}
-          onPlay={() => {
-            setIsPlayingTTS(true);
-            setShowPlaybackControls(true);
-          }}
-          onError={(e) => console.error("Audio element error:", e)}
         />
-      )}
 
-      {/* Contact Modal */}
-      {showContactModal && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          onClick={handleCloseContactModal}
+        {/* Logo / Content Layer - Hides when Presence starts */}
+        <motion.div
+          animate={{ opacity: (phase === 'presence' || phase === 'transition' || phase === 'active') ? 0 : 1 }}
+          transition={{ duration: 0.5 }}
+        // Pass yOffset to logo for visual feedback during drag
         >
-          <div
-            className="bg-white rounded-2xl px-8 py-6 shadow-2xl max-w-sm mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-lg font-semibold text-gray-900 text-center">
-              Got it — I&apos;ll be in touch soon.
-            </p>
-            <button
-              onClick={handleCloseContactModal}
-              className="mt-4 w-full px-4 py-2 bg-[#001E3F] text-white rounded-md hover:bg-[#002a5c] transition-colors"
-            >
-              OK
-            </button>
-          </div>
+          <IdentityLogo state={logoState} yOffset={phase === 'reveal' ? yOffset : 0} />
+        </motion.div>
+
+        {/* Swipe Hint */}
+        <SwipeIndicator isVisible={phase === 'reveal'} />
+      </div>
+
+      {/* Phase 2: Digital Presence Layer */}
+      {/* We use AnimatePresence inside the component to handle exit slide-up */}
+      <PresenceCard
+        isVisible={phase === 'presence'}
+        onComplete={handlePresenceComplete}
+      />
+
+      {/* Phase 4: Audio Theater (First Screen) */}
+      <div className="h-screen w-full relative">
+        <AudioTheater
+          isVisible={showTheater}
+          onScrollToRead={handleScrollToRead}
+          audioProgress={audioProgress}
+          isPlaying={isPlaying}
+          onTogglePlay={togglePlay}
+        />
+      </div>
+
+      {/* Phase 5: Depth Reading (Below Fold) */}
+      {phase === 'active' && (
+        <div className="relative z-30 bg-[#F9F9F9]">
+          <DepthReading onScrollProgress={setScrollProgress} />
         </div>
       )}
-    </div>
+
+      {/* Reciprocity CTA */}
+      <CuratorCTA isVisible={scrollProgress > 0.6} />
+
+    </motion.div>
   );
 }
