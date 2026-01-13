@@ -16,7 +16,7 @@ export function MagnetTheater({ title, isPlaying, onTogglePlay, onScrollDown }: 
     const sonarTransition = {
         duration: 4,
         repeat: Infinity,
-        ease: "linear"
+        ease: "linear" as const
     };
 
     return (
