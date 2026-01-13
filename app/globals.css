@@ -26,6 +26,19 @@
   box-sizing: border-box;
 }
 
+@layer base {
+  :root {
+    --sotheby-blue: #002349;
+    --estate-white: #F9F9F9;
+    --gallery-grey: #707070;
+    --metallic-gold: #B89B5E;
+  }
+}
+
+.font-serif-luxury {
+  font-family: 'Playfair Display', serif;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
