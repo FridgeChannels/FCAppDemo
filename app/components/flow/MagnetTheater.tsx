@@ -13,13 +13,6 @@ interface MagnetTheaterProps {
 }
 
 export function MagnetTheater({ title, isPlaying, onTogglePlay, benefits, onFindAdvisor }: MagnetTheaterProps) {
-    // Sonar Ring Animation
-    const sonarTransition = {
-        duration: 4,
-        repeat: Infinity,
-        ease: "linear" as const
-    };
-
     return (
         <div className="relative w-full h-[100dvh] bg-[#002349] overflow-hidden flex flex-col items-center text-white">
             {/* Background Texture (Noise) */}
@@ -28,31 +21,6 @@ export function MagnetTheater({ title, isPlaying, onTogglePlay, benefits, onFind
                     backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`
                 }}
             />
-
-            {/* Central Resonance (Sonar Rings) - Fixed Background */}
-            <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none overflow-hidden">
-                {/* Outer Ring */}
-                <motion.div
-                    className="absolute w-[140vw] h-[140vw] sm:w-[600px] sm:h-[600px] rounded-full border border-white/10"
-                    animate={{ rotate: 360 }}
-                    transition={sonarTransition}
-                    style={{ borderStyle: 'dashed' }}
-                />
-                {/* Mid Ring */}
-                <motion.div
-                    className="absolute w-[100vw] h-[100vw] sm:w-[400px] sm:h-[400px] rounded-full border border-[#B89B5E]/30"
-                    animate={{ rotate: -360 }}
-                    transition={{ ...sonarTransition, duration: 8 }}
-                    style={{ borderStyle: 'dashed' }}
-                />
-                {/* Inner Ring */}
-                <motion.div
-                    className="absolute w-[60vw] h-[60vw] sm:w-[250px] sm:h-[250px] rounded-full border border-white/20"
-                    animate={{ rotate: 180 }}
-                    transition={{ ...sonarTransition, duration: 6 }}
-                    style={{ borderStyle: 'dotted' }}
-                />
-            </div>
 
             {/* Main Content - Scrollable Layer */}
             <div className="relative z-10 w-full h-full overflow-y-auto overflow-x-hidden flex flex-col items-center">
@@ -75,12 +43,12 @@ export function MagnetTheater({ title, isPlaying, onTogglePlay, benefits, onFind
                     {/* Benefits Section ("What to Expect") - Editorial Style */}
                     {benefits && benefits.length > 0 && (
                         <motion.div
-                            className="w-full max-w-xl"
+                            className="w-fit border-[0.5px] border-blue-300 rounded-lg p-6"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.8, duration: 0.8 }}
                         >
-                            <h2 className="text-xs font-medium tracking-[0.25em] uppercase text-[#B89B5E] text-center mb-10 opacity-90">
+                            <h2 className="text-xs font-medium tracking-[0.25em] uppercase text-[#B89B5E] text-center mb-10 opacity-90 whitespace-nowrap">
                                 What to Expect
                             </h2>
                             <ul className="space-y-6 sm:space-y-8 text-center">
@@ -109,7 +77,7 @@ export function MagnetTheater({ title, isPlaying, onTogglePlay, benefits, onFind
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.2, duration: 0.8 }}
                 >
-                    <div className="w-full max-w-xs pointer-events-auto">
+                    <div className="w-full max-w-lg pointer-events-auto">
                         <button
                             onClick={onFindAdvisor}
                             className="w-full py-3 sm:py-4 px-8 bg-[#B89B5E] text-white font-medium text-lg sm:text-xl tracking-[0.2em] uppercase rounded-full hover:bg-[#a38850] transition-all shadow-[0_0_20px_rgba(184,155,94,0.3)] active:scale-[0.98] duration-300"

@@ -93,24 +93,33 @@ export function AudioTheater({
                     className="w-full flex justify-between items-center z-10 gap-4 p-4 overflow-hidden cursor-pointer active:scale-95 transition-transform"
                     onClick={toggleCategories}
                 >
-                    {/* Wine Image - Circular & subtler - Dynamic */}
-                    <div className="w-12 h-12 rounded-full bg-[#F5E6E6] flex-shrink-0 overflow-hidden shadow-sm opacity-80 border border-white/5">
-                        <img
-                            src={currentChannel.category_img}
-                            alt="Channel"
-                            className="w-full h-full object-cover"
-                        />
+                    {/* Sotheby's Logo - Circular */}
+                    <div className="w-12 h-12 rounded-full bg-white flex-shrink-0 overflow-hidden shadow-sm opacity-80 border border-white/5 flex items-center justify-center p-2">
+                        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                            <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" fontSize="140" fontFamily="serif" fontWeight="bold" fill="#002349">S</text>
+                        </svg>
                     </div>
 
                     {/* Title - Channel Name & Scrolling Content */}
                     <div className="flex-1 min-w-0 flex flex-col justify-center overflow-hidden">
-                        <motion.span
-                            className="text-white/50 text-[10px] uppercase tracking-[0.2em] mb-1"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                        >
-                            {currentChannel.category} CHANNEL
-                        </motion.span>
+                        <div className="flex items-center justify-between mb-1">
+                            <motion.span
+                                className="text-white/50 text-[10px] uppercase tracking-[0.2em]"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                            >
+                                {currentChannel.category} CHANNEL
+                            </motion.span>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleCategories();
+                                }}
+                                className="w-2 h-2 rounded border border-white/10 flex items-center justify-center flex-shrink-0 bg-transparent"
+                            >
+                                <Menu size={16} className="text-white" strokeWidth={2} />
+                            </button>
+                        </div>
 
                         {/* Marquee Container */}
                         <div className="relative w-full overflow-hidden h-6 mask-linear-fade">
