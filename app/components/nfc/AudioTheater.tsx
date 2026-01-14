@@ -282,7 +282,7 @@ export function AudioTheater({
                         <div className="w-10 h-10 rounded-full bg-stone-800 border border-white/10 overflow-hidden relative">
                             {/* User Avatar Image */}
                             <img
-                                src="https://dl6bglhcfn2kh.cloudfront.net/James-Falconer-c9710917869cf8554ca5bc49f6595242.jpg?version=1749563435"
+                                src="/images/james_avatar.jpg"
                                 alt="James"
                                 className="w-full h-full object-cover"
                             />

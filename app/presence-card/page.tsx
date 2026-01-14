@@ -183,7 +183,7 @@ export default function NFCPage() {
       transition={{ duration: 1.0 }}
     >
       {/* Preload Hints */}
-      <link rel="preload" href="https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/93ec84e3-7921-4d3d-917d-21450d95be12.mp3" as="audio" />
+      <link rel="preload" href="/audio/intro_presence.mp3" as="audio" />
 
       {/* Phase 1: Ripple Trigger & Phase 1.5: Logo Swipe Layer */}
       <div className="fixed inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">
@@ -208,6 +208,20 @@ export default function NFCPage() {
       <PresenceCard
         isVisible={phase === 'presence'}
         onComplete={handlePresenceComplete}
+        onStart={async () => {
+          // iOS Audio Warmup Hack
+          // Use this user interaction to unlock the main audio element
+          if (audioRef.current) {
+            try {
+              // Just play/pause the existing ref (which was preloaded)
+              await audioRef.current.play();
+              audioRef.current.pause();
+              audioRef.current.currentTime = 0;
+            } catch (e) {
+              console.warn("Audio warmup failed", e);
+            }
+          }
+        }}
       />
 
       {/* Phase 4: Audio Theater (First Screen) */}

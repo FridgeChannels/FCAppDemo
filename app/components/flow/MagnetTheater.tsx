@@ -24,11 +24,11 @@ export function MagnetTheater({ title, isPlaying, onTogglePlay, benefits, onFind
 
             {/* Main Content - Scrollable Layer */}
             <div className="relative z-10 w-full h-full overflow-y-auto overflow-x-hidden flex flex-col items-center">
-                <div className="flex flex-col items-center text-center space-y-12 px-6 max-w-lg pt-24 pb-48 w-full">
+                <div className="flex flex-col items-center text-center space-y-8 sm:space-y-12 px-5 sm:px-6 max-w-lg pt-16 sm:pt-24 pb-48 sm:pb-48 w-full">
 
                     {/* Dynamic Title */}
                     <motion.h1
-                        className="font-serif-luxury text-3xl sm:text-5xl leading-tight tracking-wide text-[#F9F9F9]"
+                        className="font-serif-luxury text-2xl sm:text-5xl leading-tight tracking-wide text-[#F9F9F9]"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 1.0, ease: "easeOut" }}
@@ -43,15 +43,15 @@ export function MagnetTheater({ title, isPlaying, onTogglePlay, benefits, onFind
                     {/* Benefits Section ("What to Expect") - Editorial Style */}
                     {benefits && benefits.length > 0 && (
                         <motion.div
-                            className="w-fit border-[0.5px] border-blue-300 rounded-lg p-6"
+                            className="w-fit border-[0.5px] border-blue-300 rounded-lg p-5 sm:p-6"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.8, duration: 0.8 }}
                         >
-                            <h2 className="text-xs font-medium tracking-[0.25em] uppercase text-[#B89B5E] text-center mb-10 opacity-90 whitespace-nowrap">
+                            <h2 className="text-[10px] sm:text-xs font-medium tracking-[0.25em] uppercase text-[#B89B5E] text-center mb-6 sm:mb-10 opacity-90 whitespace-nowrap">
                                 What to Expect
                             </h2>
-                            <ul className="space-y-6 sm:space-y-8 text-center">
+                            <ul className="space-y-5 sm:space-y-8 text-center">
                                 {benefits.map((benefit, i) => (
                                     <motion.li
                                         key={i}

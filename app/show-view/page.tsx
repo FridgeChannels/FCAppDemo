@@ -26,8 +26,8 @@ export default function ShowViewPage() {
   };
 
   // Get current title based on selected category
-  const currentTitle = selectedCategory 
-    ? categoryTitles[selectedCategory] 
+  const currentTitle = selectedCategory
+    ? categoryTitles[selectedCategory]
     : 'Château Excellence: A Legacy of Terroir and Tradition';
 
   const togglePlayPause = () => {
@@ -50,13 +50,13 @@ export default function ShowViewPage() {
   return (
     <div className="relative w-full min-h-screen overflow-hidden">
       {/* Gradient Background - Soft blur effect */}
-      <div 
+      <div
         className="absolute inset-0 z-0"
         style={{
           background: 'linear-gradient(to bottom, rgba(180, 120, 180, 0.85), rgba(80, 60, 100, 0.95))',
         }}
       />
-      <div 
+      <div
         className="absolute inset-0 z-0"
         style={{
           backdropFilter: 'blur(40px) saturate(180%)',
@@ -75,7 +75,7 @@ export default function ShowViewPage() {
             exit={{ opacity: 0 }}
             onClick={toggleCategories}
           />
-          
+
           {/* Category Panel */}
           <motion.div
             className="fixed top-0 right-0 h-full w-80 z-50 backdrop-blur-[20px] bg-[rgba(60,50,80,0.95)] border-l border-white/10 shadow-2xl"
@@ -125,7 +125,7 @@ export default function ShowViewPage() {
           <button className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-[20px] flex items-center justify-center border border-white/10">
             <X size={18} className="text-white" strokeWidth={2} />
           </button>
-          <button 
+          <button
             onClick={toggleCategories}
             className="px-4 py-2 rounded-lg bg-white/20 backdrop-blur-[20px] border border-white/10"
           >
@@ -150,7 +150,7 @@ export default function ShowViewPage() {
 
           {/* Text Content */}
           <div className="flex-1 min-w-0">
-            <motion.h3 
+            <motion.h3
               className="text-white text-base font-medium leading-tight mb-1.5"
               key={selectedCategory || 'default'}
               initial={{ opacity: 0, y: 10 }}
@@ -179,50 +179,50 @@ export default function ShowViewPage() {
           <div className="relative w-full h-full flex items-center justify-center">
             <div className="relative w-72 h-72">
               {/* Base shape with gradient */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-400 via-green-400 via-yellow-400 to-purple-500 opacity-90" 
-                style={{ 
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-400 via-green-400 via-yellow-400 to-purple-500 opacity-90"
+                style={{
                   filter: 'blur(1px)',
                   transform: 'perspective(1000px) rotateX(5deg) rotateY(-5deg)'
                 }}
               />
-              
+
               {/* 3D Bubble Elements - Multiple layers for depth */}
               {/* Large bubbles */}
-              <div className="absolute top-8 left-12 w-20 h-20 rounded-full bg-gradient-to-br from-blue-300 to-cyan-400 shadow-[0_8px_16px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,0.3)]" 
+              <div className="absolute top-8 left-12 w-20 h-20 rounded-full bg-gradient-to-br from-blue-300 to-cyan-400 shadow-[0_8px_16px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,0.3)]"
                 style={{ transform: 'translateZ(10px)' }}
               />
-              <div className="absolute top-16 right-16 w-24 h-24 rounded-full bg-gradient-to-br from-green-300 to-emerald-400 shadow-[0_8px_16px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,0.3)]" 
+              <div className="absolute top-16 right-16 w-24 h-24 rounded-full bg-gradient-to-br from-green-300 to-emerald-400 shadow-[0_8px_16px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,0.3)]"
                 style={{ transform: 'translateZ(15px)' }}
               />
-              <div className="absolute bottom-20 left-20 w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 shadow-[0_8px_16px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,0.3)]" 
+              <div className="absolute bottom-20 left-20 w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 shadow-[0_8px_16px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,0.3)]"
                 style={{ transform: 'translateZ(8px)' }}
               />
-              <div className="absolute bottom-12 right-12 w-16 h-16 rounded-full bg-gradient-to-br from-purple-300 to-pink-400 shadow-[0_8px_16px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,0.3)]" 
+              <div className="absolute bottom-12 right-12 w-16 h-16 rounded-full bg-gradient-to-br from-purple-300 to-pink-400 shadow-[0_8px_16px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,0.3)]"
                 style={{ transform: 'translateZ(12px)' }}
               />
-              
+
               {/* Medium bubbles */}
-              <div className="absolute top-32 left-24 w-12 h-12 rounded-full bg-gradient-to-br from-cyan-300 to-blue-400 shadow-[0_4px_8px_rgba(0,0,0,0.15),inset_0_1px_2px_rgba(255,255,255,0.4)]" 
+              <div className="absolute top-32 left-24 w-12 h-12 rounded-full bg-gradient-to-br from-cyan-300 to-blue-400 shadow-[0_4px_8px_rgba(0,0,0,0.15),inset_0_1px_2px_rgba(255,255,255,0.4)]"
                 style={{ transform: 'translateZ(5px)' }}
               />
-              <div className="absolute top-40 right-28 w-14 h-14 rounded-full bg-gradient-to-br from-emerald-300 to-green-400 shadow-[0_4px_8px_rgba(0,0,0,0.15),inset_0_1px_2px_rgba(255,255,255,0.4)]" 
+              <div className="absolute top-40 right-28 w-14 h-14 rounded-full bg-gradient-to-br from-emerald-300 to-green-400 shadow-[0_4px_8px_rgba(0,0,0,0.15),inset_0_1px_2px_rgba(255,255,255,0.4)]"
                 style={{ transform: 'translateZ(7px)' }}
               />
-              <div className="absolute bottom-32 left-32 w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-yellow-400 shadow-[0_4px_8px_rgba(0,0,0,0.15),inset_0_1px_2px_rgba(255,255,255,0.4)]" 
+              <div className="absolute bottom-32 left-32 w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-yellow-400 shadow-[0_4px_8px_rgba(0,0,0,0.15),inset_0_1px_2px_rgba(255,255,255,0.4)]"
                 style={{ transform: 'translateZ(6px)' }}
               />
-              
+
               {/* Small bubbles for texture */}
               <div className="absolute top-24 left-40 w-8 h-8 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 shadow-[0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.5)]" />
               <div className="absolute top-48 right-20 w-6 h-6 rounded-full bg-gradient-to-br from-blue-200 to-cyan-300 shadow-[0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.5)]" />
               <div className="absolute bottom-40 right-36 w-7 h-7 rounded-full bg-gradient-to-br from-green-200 to-emerald-300 shadow-[0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.5)]" />
               <div className="absolute bottom-28 left-48 w-9 h-9 rounded-full bg-gradient-to-br from-yellow-200 to-orange-300 shadow-[0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.5)]" />
-              
+
               {/* Center focal bubble */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-28 h-28 rounded-full bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 shadow-[0_12px_24px_rgba(0,0,0,0.3),inset_0_3px_6px_rgba(255,255,255,0.4)]" 
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-28 h-28 rounded-full bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 shadow-[0_12px_24px_rgba(0,0,0,0.3),inset_0_3px_6px_rgba(255,255,255,0.4)]"
                 style={{ transform: 'translate(-50%, -50%) translateZ(20px)' }}
               />
-              
+
               {/* Highlight/Shine effect */}
               <div className="absolute top-1/4 left-1/4 w-16 h-16 rounded-full bg-white/20 blur-xl" />
             </div>
@@ -248,7 +248,7 @@ export default function ShowViewPage() {
           </button>
 
           {/* Play/Pause Button */}
-          <button 
+          <button
             onClick={togglePlayPause}
             className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-[20px] border border-white/10 flex items-center justify-center"
           >
@@ -276,7 +276,7 @@ export default function ShowViewPage() {
             <div className="w-10 h-10 rounded-full bg-stone-800 border border-white/10 overflow-hidden relative">
               {/* User Avatar Image */}
               <img
-                src="https://dl6bglhcfn2kh.cloudfront.net/James-Falconer-c9710917869cf8554ca5bc49f6595242.jpg?version=1749563435"
+                src="/images/james_avatar.jpg"
                 alt="James"
                 className="w-full h-full object-cover"
               />

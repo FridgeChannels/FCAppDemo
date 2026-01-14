@@ -9,6 +9,7 @@ import { Play } from 'lucide-react';
 interface PresenceCardProps {
     isVisible: boolean;
     onComplete: () => void;
+    onStart?: () => Promise<void> | void;
 }
 
 // Stagger Text Config
@@ -20,7 +21,7 @@ const textLines = [
     "Welcome to your private frequency."
 ];
 
-export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
+export function PresenceCard({ isVisible, onComplete, onStart }: PresenceCardProps) {
     const [startExit, setStartExit] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isStarted, setIsStarted] = useState(false);
@@ -42,7 +43,7 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
 
     useEffect(() => {
         if (isVisible) {
-            const audio = new Audio('https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/93ec84e3-7921-4d3d-917d-21450d95be12.mp3');
+            const audio = new Audio('/audio/intro_presence.mp3');
             // NO crossOrigin setting to avoid CORS fail
             audio.volume = 1.0;
             audio.playbackRate = 1.1;
@@ -75,6 +76,14 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
     }, [isVisible, triggerExit]);
 
     const handleStart = async () => {
+        if (onStart) {
+            try {
+                await onStart(); // Ensure warmup is complete/paused before starting intro
+            } catch (e) {
+                console.warn("Warmup failed", e);
+            }
+        }
+
         if (audioRef.current) {
             try {
                 await audioRef.current.play();
@@ -146,11 +155,12 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
                             <div className="w-32 h-32 rounded-full border-[0.5px] border-[#B89B5E] p-1 flex items-center justify-center relative">
                                 <div className="w-full h-full rounded-full bg-stone-800 overflow-hidden relative">
                                     <Image
-                                        src="https://dl6bglhcfn2kh.cloudfront.net/James-Falconer-c9710917869cf8554ca5bc49f6595242.jpg?version=1749563435"
+                                        src="/images/james_avatar.jpg"
                                         alt="James Falconer"
                                         fill
                                         sizes="128px"
                                         className="object-cover transition-all duration-700"
+                                        unoptimized
                                     />
                                 </div>
                             </div>

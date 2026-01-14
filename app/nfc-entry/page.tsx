@@ -151,7 +151,7 @@ export default function NFCPage() {
             transition={{ duration: 1.0 }}
         >
             {/* Preload Hints */}
-            <link rel="preload" href="https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/93ec84e3-7921-4d3d-917d-21450d95be12.mp3" as="audio" />
+            <link rel="preload" href="/audio/intro_presence.mp3" as="audio" />
 
             {/* Phase 1: Ripple Trigger & Phase 1.5: Logo Swipe Layer */}
             <div className="fixed inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">

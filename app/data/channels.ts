@@ -10,25 +10,25 @@ export const CHANNELS: ChannelData[] = [
         category: "SOTHEBY'S",
         category_img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=200&h=200&fit=crop&crop=center",
         content: "The Luxury Market Lowdown North Texas 2025",
-        voice_url: "https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/48e54e68-b0d0-4745-8cae-08908725065f.mp3"
+        voice_url: "/audio/48e54e68.mp3"
     },
     {
         category: "Tech News",
         category_img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&h=200&fit=crop&crop=center",
         content: "Apple Creator Studio Signals a Shift Toward AI-Powered Subscription Creativity",
-        voice_url: "https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/d8218526-b33b-4d87-985c-3ec678c84f06.mp3"
+        voice_url: "/audio/d8218526.mp3"
     },
     {
         category: "Sport",
         category_img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200&h=200&fit=crop&crop=center",
         content: "NBA Mid-Season Snapshot: Stability, Injuries, and Emerging Contenders",
-        voice_url: "https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/c784f245-2d59-4312-9fc6-2bcc87444ec4.mp3"
+        voice_url: "/audio/c784f245.mp3"
     },
     {
         category: "Lifestyle",
         category_img: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=200&h=200&fit=crop&crop=center",
         content: "Château Excellence: A Legacy of Terroir and Tradition",
-        voice_url: "https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/6d5d4873-60ee-474f-b98e-64ec17b704bc.mp3"
+        voice_url: "/audio/6d5d4873.mp3"
     },
     {
         category: "Business",
