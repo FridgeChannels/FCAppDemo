@@ -3,12 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { RippleTrigger } from '../components/nfc/RippleTrigger';
-import { IdentityLogo } from '../components/nfc/IdentityLogo';
+
 import { PresenceCard } from '../components/nfc/PresenceCard';
 import { AudioTheater } from '../components/nfc/AudioTheater';
-import { DepthReading } from '../components/nfc/DepthReading';
+// import { DepthReading } from '../components/nfc/DepthReading';
 import { CuratorCTA } from '../components/nfc/CuratorCTA';
-import { SwipeIndicator } from '../components/nfc/SwipeIndicator'; // Restored
+
 
 // Phases of the animation
 // idle -> triggered -> reveal -> presence -> transition -> active
@@ -18,7 +18,7 @@ export default function NFCPage() {
   const [phase, setPhase] = useState<AnimationPhase>('idle');
   const [scrollProgress, setScrollProgress] = useState(0);
   const [audioProgress, setAudioProgress] = useState(0);
-  const [yOffset, setYOffset] = useState(0); // For Swipe Drag
+
   const [isPlaying, setIsPlaying] = useState(false); // Main Audio State
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -46,8 +46,8 @@ export default function NFCPage() {
     setPhase('triggered');
 
     // 0ms: Triggered (Ripple)
-    // 300ms: Reveal Logo -> THEN WAIT FOR SWIPE
-    setTimeout(() => setPhase('reveal'), 300);
+    // Immediate transition to Presence, skipping Logo/Reveal
+    handleSwipeComplete();
   };
 
   const handleSwipeComplete = () => {
@@ -129,11 +129,7 @@ export default function NFCPage() {
   };
 
   const showRipple = phase === 'triggered' || phase === 'reveal';
-  const logoState = phase === 'idle' || phase === 'triggered'
-    ? 'hidden'
-    : phase === 'reveal'
-      ? 'reveal'
-      : 'move-up';
+
 
   const showTheater = phase === 'transition' || phase === 'active';
 
@@ -160,39 +156,14 @@ export default function NFCPage() {
           <RippleTrigger isActive={phase === 'triggered'} />
         </div>
 
-        {/* Interaction Layer (Only active during reveal) */}
+        {/* Interaction Layer (Removed - Auto Transition) */}
         <motion.div
-          className="absolute inset-0 z-50 cursor-grab active:cursor-grabbing pointer-events-auto"
-          style={{ display: phase === 'reveal' ? 'block' : 'none', top: '-16px' }}
-          drag="y"
-          dragConstraints={{ top: -200, bottom: 0 }}
-          dragElastic={0.2}
-          onDrag={(event, info) => {
-            // Only allow dragging up
-            if (info.offset.y < 0) {
-              setYOffset(info.offset.y);
-            }
-          }}
-          onDragEnd={(event, info) => {
-            if (info.offset.y < -100) {
-              handleSwipeComplete();
-            } else {
-              setYOffset(0); // Snap back
-            }
-          }}
+          className="absolute inset-0 z-50 pointer-events-none"
         />
 
-        {/* Logo / Content Layer - Hides when Presence starts */}
-        <motion.div
-          animate={{ opacity: (phase === 'presence' || phase === 'transition' || phase === 'active') ? 0 : 1 }}
-          transition={{ duration: 0.5 }}
-        // Pass yOffset to logo for visual feedback during drag
-        >
-          <IdentityLogo state={logoState} yOffset={phase === 'reveal' ? yOffset : 0} />
-        </motion.div>
 
-        {/* Swipe Hint */}
-        <SwipeIndicator isVisible={phase === 'reveal'} />
+
+
       </div>
 
       {/* Phase 2: Digital Presence Layer */}
@@ -214,14 +185,14 @@ export default function NFCPage() {
       </div>
 
       {/* Phase 5: Depth Reading (Below Fold) */}
-      {phase === 'active' && (
+      {/* {phase === 'active' && (
         <div className="relative z-30 bg-[#F9F9F9]">
           <DepthReading onScrollProgress={setScrollProgress} />
         </div>
-      )}
+      )} */}
 
       {/* Reciprocity CTA */}
-      <CuratorCTA isVisible={scrollProgress > 0.6} />
+      {/* <CuratorCTA isVisible={scrollProgress > 0.6} /> */}
 
     </motion.div>
   );

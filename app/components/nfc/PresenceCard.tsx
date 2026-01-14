@@ -2,6 +2,8 @@
 
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
+import { Play } from 'lucide-react';
+
 
 interface PresenceCardProps {
     isVisible: boolean;
@@ -11,6 +13,7 @@ interface PresenceCardProps {
 export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
     const [startExit, setStartExit] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isStarted, setIsStarted] = useState(false);
     const [lineDelay, setLineDelay] = useState(1.0);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -42,15 +45,6 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
                 triggerExit();
             };
 
-            const playAudio = async () => {
-                try {
-                    await audio.play();
-                    setIsPlaying(true);
-                } catch (err) {
-                    console.log("Autoplay check:", err);
-                }
-            };
-
             // Calculate timing based on metadata
             audio.onloadedmetadata = () => {
                 const rawDuration = audio.duration;
@@ -58,8 +52,6 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
                 const revealWindow = adjustedDuration * 0.85;
                 const perLine = revealWindow / textLines.length;
                 setLineDelay(perLine);
-
-                playAudio();
             };
 
             // Fallback if metadata loads too fast or calc fails
@@ -73,6 +65,18 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
             };
         }
     }, [isVisible]);
+
+    const handleStart = async () => {
+        if (audioRef.current) {
+            try {
+                await audioRef.current.play();
+                setIsStarted(true);
+                setIsPlaying(true);
+            } catch (err) {
+                console.log("Play failed:", err);
+            }
+        }
+    };
 
     // High-Fidelity Voice Simulation Loop
     // Simulates waveform peaks/valleys randomly while playing
@@ -124,28 +128,47 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
                     />
 
                     {/* Avatar Portrait - Audio Reactive (Simulated) */}
-                    <motion.div
-                        className="relative z-10 mb-12"
-                        initial={{ scale: 1.1, filter: 'blur(10px)', opacity: 0 }}
-                        animate={{
-                            filter: 'blur(0px)',
-                            opacity: 1
-                        }}
-                        style={{ scale: smoothScale }} // Spring smoothed random values
-                        transition={{
-                            default: { duration: 1.5, ease: "easeOut" }
-                        }}
-                    >
-                        <div className="w-32 h-32 rounded-full border-[0.5px] border-[#B89B5E] p-1 flex items-center justify-center relative">
-                            <div className="w-full h-full rounded-full bg-stone-800 overflow-hidden relative">
-                                <img
-                                    src="https://dl6bglhcfn2kh.cloudfront.net/James-Falconer-c9710917869cf8554ca5bc49f6595242.jpg?version=1749563435"
-                                    alt="James Falconer"
-                                    className="w-full h-full object-cover transition-all duration-700"
-                                />
+                    <div className="relative">
+                        <motion.div
+                            className="relative z-10 mb-12"
+                            initial={{ scale: 1.1, filter: 'blur(10px)', opacity: 0 }}
+                            animate={{
+                                filter: isStarted ? 'blur(0px)' : 'blur(5px)',
+                                opacity: 1,
+                                scale: isStarted ? undefined : 1
+                            }}
+                            style={{ scale: isStarted ? smoothScale : 1 }} // Spring smoothed random values
+                            transition={{
+                                default: { duration: 1.5, ease: "easeOut" }
+                            }}
+                        >
+                            <div className="w-32 h-32 rounded-full border-[0.5px] border-[#B89B5E] p-1 flex items-center justify-center relative">
+                                <div className="w-full h-full rounded-full bg-stone-800 overflow-hidden relative">
+                                    <img
+                                        src="https://dl6bglhcfn2kh.cloudfront.net/James-Falconer-c9710917869cf8554ca5bc49f6595242.jpg?version=1749563435"
+                                        alt="James Falconer"
+                                        className="w-full h-full object-cover transition-all duration-700"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+
+                        {/* Play Button Overlay */}
+                        {!isStarted && (
+                            <motion.button
+                                onClick={handleStart}
+                                className="absolute inset-0 flex items-center justify-center z-20 pb-12"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <div className="w-16 h-16 rounded-full bg-[#B89B5E]/90 backdrop-blur-sm flex items-center justify-center shadow-[0_0_30px_rgba(184,155,94,0.4)] border border-[#F9F9F9]/20">
+                                    <Play className="w-6 h-6 text-[#002349] fill-current ml-1" />
+                                </div>
+                            </motion.button>
+                        )}
+                    </div>
 
                     {/* Staggered Text */}
                     <div className="z-10 text-center space-y-4 px-8 max-w-md">

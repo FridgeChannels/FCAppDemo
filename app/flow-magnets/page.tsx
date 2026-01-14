@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { NewsletterData } from '@/lib/types/notion';
 import { MagnetTheater } from '../components/flow/MagnetTheater';
-import { MagnetContent } from '../components/flow/MagnetContent';
 
 // 静态数据 - 苏富比冰箱贴
 const staticNewsletterData: NewsletterData = {
@@ -94,10 +93,6 @@ export default function FlowMagnets() {
     }
   };
 
-  const handleScrollToContent = () => {
-    window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
-  };
-
   const handleFindAdvisor = () => {
     router.push('/advisors');
   };
@@ -109,15 +104,7 @@ export default function FlowMagnets() {
         title={newsletter.title}
         isPlaying={isPlayingTTS}
         onTogglePlay={handleTogglePlay}
-        onScrollDown={handleScrollToContent}
-      />
-
-      {/* Content Section */}
-      <MagnetContent
-        author={newsletter.author}
-        time={newsletter.time}
         benefits={newsletter.benefits}
-        contentHtml={newsletter.content}
         onFindAdvisor={handleFindAdvisor}
       />
     </div>

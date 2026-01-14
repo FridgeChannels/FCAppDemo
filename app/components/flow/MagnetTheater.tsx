@@ -1,19 +1,18 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Play, Pause, ChevronDown } from 'lucide-react';
+import { Play, Pause } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface MagnetTheaterProps {
     title: string;
     isPlaying: boolean;
     onTogglePlay: () => void;
-    onScrollDown: () => void;
     benefits?: string[];
     onFindAdvisor?: () => void;
 }
 
-export function MagnetTheater({ title, isPlaying, onTogglePlay, onScrollDown, benefits, onFindAdvisor }: MagnetTheaterProps) {
+export function MagnetTheater({ title, isPlaying, onTogglePlay, benefits, onFindAdvisor }: MagnetTheaterProps) {
     // Sonar Ring Animation
     const sonarTransition = {
         duration: 4,
@@ -56,7 +55,7 @@ export function MagnetTheater({ title, isPlaying, onTogglePlay, onScrollDown, be
             </div>
 
             {/* Main Content */}
-            <div className="relative z-10 flex flex-col items-center text-center space-y-8 px-6 max-w-lg pt-16 sm:pt-24">
+            <div className="relative z-10 flex flex-col items-center text-center space-y-18 px-6 max-w-lg pt-16 sm:pt-24">
 
                 {/* Dynamic Title */}
                 <motion.h1
@@ -72,83 +71,93 @@ export function MagnetTheater({ title, isPlaying, onTogglePlay, onScrollDown, be
                     ))}
                 </motion.h1>
 
-                {/* Audio Control (Play/Pause) */}
-                <motion.button
-                    onClick={onTogglePlay}
-                    className="group relative flex items-center justify-center w-16 h-16 rounded-full border border-[#B89B5E] bg-[#002349]/50 backdrop-blur-sm hover:bg-[#B89B5E] transition-all duration-500"
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.5, duration: 0.8 }}
-                    whileTap={{ scale: 0.95 }}
-                >
-                    {isPlaying ? (
-                        <Pause className="w-6 h-6 text-[#F9F9F9] fill-current" />
-                    ) : (
-                        <Play className="w-6 h-6 text-[#F9F9F9] fill-current ml-1" />
-                    )}
-
-                    {/* Glow Effect */}
-                    <div className="absolute inset-0 rounded-full border border-[#B89B5E] opacity-50 blur-[2px] animate-pulse group-hover:blur-[4px] transition-all" />
-                </motion.button>
-
-                {/* Benefits Section ("You'll get") */}
+                {/* Benefits Section ("What to Expect") - Editorial Style */}
                 {benefits && benefits.length > 0 && (
                     <motion.div
-                        className="mt-12 bg-white/10 backdrop-blur-[20px] border border-white/20 rounded-lg p-6 max-w-md w-full"
+                        className="mt-24 w-full max-w-xl"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.8, duration: 0.8 }}
                     >
-                        <h2 className="font-serif-luxury text-xl text-center mb-6 text-white">
-                            You&apos;ll get:
+                        <h2 className="text-xs font-medium tracking-[0.25em] uppercase text-[#B89B5E] text-center mb-10 opacity-90">
+                            What to Expect
                         </h2>
-                        <ul className="space-y-3">
+                        <ul className="space-y-8 text-center">
                             {benefits.map((benefit, i) => (
                                 <motion.li
                                     key={i}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.9 + i * 0.1 }}
-                                    className="flex items-start space-x-3 text-sm font-light leading-relaxed text-white/90"
+                                    className="text-lg sm:text-xl font-light leading-relaxed text-[#F9F9F9]/90"
                                 >
-                                    <span className="text-[#B89B5E] mt-1.5 text-xs">◆</span>
-                                    <span>{benefit}</span>
+                                    {benefit}
                                 </motion.li>
                             ))}
                         </ul>
                     </motion.div>
                 )}
 
-                {/* CTA: Find an Advisor */}
-                {onFindAdvisor && (
-                    <motion.div
-                        className="mt-8 w-full max-w-md"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 1.2, duration: 0.8 }}
-                    >
+
+            </div>
+
+            {/* CTA: Find an Advisor (Pin to Bottom) */}
+            {onFindAdvisor && (
+                <motion.div
+                    className="absolute bottom-32 sm:bottom-32 w-full flex justify-center z-30 px-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.2, duration: 0.8 }}
+                >
+                    <div className="w-full max-w-xs">
                         <button
                             onClick={onFindAdvisor}
-                            className="w-full py-4 px-8 bg-[#B89B5E] text-black font-medium text-sm tracking-[0.2em] uppercase hover:bg-[#a38850] transition-colors shadow-lg active:scale-[0.98] duration-200"
+                            className="w-full py-4 px-8 bg-[#B89B5E] text-white font-medium text-xl tracking-[0.2em] uppercase rounded-full hover:bg-[#a38850] transition-all shadow-[0_0_20px_rgba(184,155,94,0.3)] active:scale-[0.98] duration-300"
                         >
                             Find an Advisor
                         </button>
-                    </motion.div>
-                )}
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Bottom Playback Controls */}
+            <div className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto px-4 bg-[#002349]/90 backdrop-blur-xl border-t border-white/10 pb-6 pt-3 z-40">
+                {/* Progress Bar (Static for now as props don't pass progress yet, or we assume full duration loop) */}
+                <div className="flex items-center justify-between gap-2 cursor-pointer" onClick={onTogglePlay}>
+                    <div className="flex-1 mr-4 min-w-0 overflow-hidden relative" style={{ height: '1.5em' }}>
+                        <h2
+                            className="text-lg font-bold text-white whitespace-nowrap absolute transition-all duration-500"
+                            style={{
+                                animation: title.length > 30 ? 'scroll-text 15s linear infinite' : 'none'
+                            }}
+                        >
+                            {title.replace(/\n/g, ' ')}
+                        </h2>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                        <button
+                            className="p-1 touch-manipulation"
+                            aria-label={isPlaying ? 'Pause' : 'Play'}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onTogglePlay();
+                            }}
+                        >
+                            {isPlaying ? (
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <rect x="8" y="6" width="3" height="12" fill="#FFFFFF" />
+                                    <rect x="13" y="6" width="3" height="12" fill="#FFFFFF" />
+                                </svg>
+                            ) : (
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M6 4L18 12L6 20V4Z" fill="#FFFFFF" />
+                                </svg>
+                            )}
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            {/* Scroll Indicator */}
-            <motion.div
-                className="absolute bottom-8 z-10 cursor-pointer"
-                onClick={onScrollDown}
-                animate={{ y: [0, 5, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-                <div className="flex flex-col items-center space-y-2 opacity-60 hover:opacity-100 transition-opacity">
-                    <span className="text-[10px] tracking-widest uppercase text-white">Discover</span>
-                    <ChevronDown className="w-5 h-5 text-[#B89B5E]" />
-                </div>
-            </motion.div>
         </div>
     );
 }
