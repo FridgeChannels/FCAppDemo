@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Hark Article UI",
+  title: "Fridge Channels",
   description: "Article reading interface",
 };
 

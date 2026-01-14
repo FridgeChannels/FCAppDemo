@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { useRef, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { RippleTrigger } from '../components/nfc/RippleTrigger';
+import { CHANNELS, ChannelData } from '../data/channels';
 
 import { PresenceCard } from '../components/nfc/PresenceCard';
 import { AudioTheater } from '../components/nfc/AudioTheater';
@@ -20,6 +21,8 @@ export default function NFCPage() {
   const [audioProgress, setAudioProgress] = useState(0);
 
   const [isPlaying, setIsPlaying] = useState(false); // Main Audio State
+  const [currentChannelIndex, setCurrentChannelIndex] = useState(0);
+  const currentChannel = CHANNELS[currentChannelIndex];
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -83,9 +86,15 @@ export default function NFCPage() {
 
   // Preload Main Audio & Event Listeners
   useEffect(() => {
-    const audio = new Audio('https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/6d5d4873-60ee-474f-b98e-64ec17b704bc.mp3');
+    // Cleanup previous audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    const audio = new Audio(currentChannel.voice_url);
     audio.loop = false; // Main content usually doesn't loop
-    audio.volume = 0;
+    audio.volume = 0; // Start at 0 for fade-in
     audioRef.current = audio;
 
     const handleTimeUpdate = () => {
@@ -100,17 +109,28 @@ export default function NFCPage() {
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
+
+    // If active, try to play immediately (switching channels)
+    if (phase === 'active') {
+      audio.play().catch(() => { });
+      setIsPlaying(true);
+      // Ensure volume is up if we are already active
+      audio.volume = 1;
+    }
+
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
     };
-  }, []);
+  }, [currentChannelIndex]); // Re-run when channel changes
 
-  // Volume Fade In (Cross-fade)
+  // Initial Volume Fade In (Cross-fade)
   useEffect(() => {
-    if (phase === 'active' && audioRef.current) {
-      let vol = 0;
+    if (phase === 'active' && audioRef.current && isPlaying) {
+      let vol = audioRef.current.volume;
+      if (vol >= 1) return;
+
       const interval = setInterval(() => {
         if (vol < 1) {
           vol += 0.05;
@@ -121,7 +141,17 @@ export default function NFCPage() {
       }, 50); // Faster fade in for content
       return () => clearInterval(interval);
     }
-  }, [phase]);
+  }, [phase, isPlaying, currentChannelIndex]);
+
+  const handleChannelSelect = (index: number) => {
+    if (index !== currentChannelIndex) {
+      setCurrentChannelIndex(index);
+      // If already playing, keep playing new track
+      if (isPlaying) {
+        // Effect will handle the switch and play
+      }
+    }
+  };
 
   // Handle Scroll to Reading Section
   const handleScrollToRead = () => {
@@ -181,6 +211,8 @@ export default function NFCPage() {
           audioProgress={audioProgress}
           isPlaying={isPlaying}
           onTogglePlay={togglePlay}
+          currentChannel={currentChannel}
+          onChannelSelect={handleChannelSelect}
         />
       </div>
 

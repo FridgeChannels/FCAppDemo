@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { RippleTrigger } from '../components/nfc/RippleTrigger';
 import { IdentityLogo } from '../components/nfc/IdentityLogo';
+import { CHANNELS } from '../data/channels';
 import { PresenceCard } from '../components/nfc/PresenceCard';
 import { AudioTheater } from '../components/nfc/AudioTheater';
 import { DepthReading } from '../components/nfc/DepthReading';
@@ -210,6 +211,8 @@ export default function NFCPage() {
                     audioProgress={audioProgress}
                     isPlaying={isPlaying}
                     onTogglePlay={togglePlay}
+                    currentChannel={CHANNELS[0]}
+                    onChannelSelect={() => { }}
                 />
             </div>
 

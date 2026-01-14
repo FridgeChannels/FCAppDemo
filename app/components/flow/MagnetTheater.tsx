@@ -55,7 +55,7 @@ export function MagnetTheater({ title, isPlaying, onTogglePlay, benefits, onFind
             </div>
 
             {/* Main Content */}
-            <div className="relative z-10 flex flex-col items-center text-center space-y-18 px-6 max-w-lg pt-16 sm:pt-24">
+            <div className="relative z-10 flex flex-col items-center text-center space-y-18 px-6 max-w-lg pt-32 sm:pt-24">
 
                 {/* Dynamic Title */}
                 <motion.h1

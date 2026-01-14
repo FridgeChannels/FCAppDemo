@@ -26,8 +26,8 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
     // Stagger Text Config
     const textLines = [
         "I am James, your dedicated advisor.",
-        "Beyond bespoke property insights, I have",
-        "curated a selection of tranquil channels",
+        "Beyond bespoke property insights,",
+        "I have curated a selection of tranquil channels",
         "for your quiet moments.",
         "Welcome to your private frequency."
     ];
