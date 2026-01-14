@@ -9,20 +9,20 @@ export const CHANNELS: ChannelData[] = [
     {
         category: "SOTHEBY'S",
         category_img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=200&h=200&fit=crop&crop=center",
-        content: "Global Real Estate Market Outlook 2026: Trends & Insights",
-        voice_url: "https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/6d5d4873-60ee-474f-b98e-64ec17b704bc.mp3"
+        content: "The Luxury Market Lowdown North Texas 2025",
+        voice_url: "https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/48e54e68-b0d0-4745-8cae-08908725065f.mp3"
     },
     {
         category: "Tech News",
         category_img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&h=200&fit=crop&crop=center",
-        content: "Innovation Frontier: The Latest in Technology and Digital Transformation",
-        voice_url: "https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/6d5d4873-60ee-474f-b98e-64ec17b704bc.mp3"
+        content: "Apple Creator Studio Signals a Shift Toward AI-Powered Subscription Creativity",
+        voice_url: "https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/d8218526-b33b-4d87-985c-3ec678c84f06.mp3"
     },
     {
         category: "Sport",
         category_img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200&h=200&fit=crop&crop=center",
-        content: "Athletic Excellence: Champions, Records, and Sporting Legends",
-        voice_url: "https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/6d5d4873-60ee-474f-b98e-64ec17b704bc.mp3"
+        content: "NBA Mid-Season Snapshot: Stability, Injuries, and Emerging Contenders",
+        voice_url: "https://amzn-s3-fc-bucket.s3.sa-east-1.amazonaws.com/audio/c784f245-2d59-4312-9fc6-2bcc87444ec4.mp3"
     },
     {
         category: "Lifestyle",
