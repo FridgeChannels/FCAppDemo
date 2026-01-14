@@ -36,7 +36,6 @@ export default function AdvisorsPage() {
     agentName: ''
   });
   const [loading, setLoading] = useState(true);
-  const [screenHeight, setScreenHeight] = useState(0);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [tempFilters, setTempFilters] = useState<FilterOptions>({
     office: 'Any Office',
@@ -96,16 +95,6 @@ export default function AdvisorsPage() {
     'Relocation',
     'Short-Sale'
   ];
-
-  // 计算屏幕高度
-  useEffect(() => {
-    const updateHeight = () => {
-      setScreenHeight(window.innerHeight);
-    };
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-    return () => window.removeEventListener('resize', updateHeight);
-  }, []);
 
   // 获取顾问数据
   useEffect(() => {
@@ -208,8 +197,7 @@ export default function AdvisorsPage() {
 
   return (
     <div
-      className="bg-white flex flex-col w-full max-w-md mx-auto overflow-hidden relative"
-      style={{ height: screenHeight || '100vh' }}
+      className="bg-white flex flex-col w-full max-w-md mx-auto overflow-hidden relative h-[100dvh]"
     >
       {/* Header */}
       <div className="flex-shrink-0 px-4 py-4 border-b border-gray-200 bg-white">
@@ -233,7 +221,7 @@ export default function AdvisorsPage() {
       <div className="flex-shrink-0 px-4 bg-white border-b border-gray-200">
         <div className="flex items-center justify-between py-2">
           <span className="text-sm text-gray-700">
-            共 {filteredAdvisors.length} 个Advisor
+            {filteredAdvisors.length} Advisors
           </span>
           <button
             onClick={() => {
@@ -263,208 +251,204 @@ export default function AdvisorsPage() {
 
           {/* Filter Panel */}
           <div
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-[#001E3F] z-50 transform transition-transform duration-300 ease-out shadow-2xl"
+            className="fixed top-0 right-0 h-[100dvh] w-full max-w-md bg-[#001E3F] z-50 transform transition-transform duration-300 ease-out shadow-2xl flex flex-col"
             style={{ transform: showFilterPanel ? 'translateX(0)' : 'translateX(100%)' }}
           >
-            <div className="flex flex-col h-full">
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/20">
-                <h2 className="text-xl font-semibold text-white" style={{ fontFamily: 'Georgia, serif' }}>
-                  Filters
-                </h2>
-                <button
-                  onClick={() => setShowFilterPanel(false)}
-                  className="text-white hover:text-gray-300 transition-colors"
-                  aria-label="Close"
+            {/* Header */}
+            <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-white/20">
+              <h2 className="text-xl font-semibold text-white" style={{ fontFamily: 'Georgia, serif' }}>
+                Filters
+              </h2>
+              <button
+                onClick={() => setShowFilterPanel(false)}
+                className="text-white hover:text-gray-300 transition-colors"
+                aria-label="Close"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Filter Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {/* Office location */}
+              <div className="mb-6">
+                <div
+                  onClick={() => setShowOfficeSelect(!showOfficeSelect)}
+                  className="flex items-center justify-between pb-2 border-b border-white/30 cursor-pointer"
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
+                  <label className="text-white text-sm font-medium">
+                    Office location
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-sm">
+                      {tempFilters.office === 'Any Office' ? 'Select' : tempFilters.office}
+                    </span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400" />
+                    </svg>
+                  </div>
+                </div>
+                {showOfficeSelect && (
+                  <div className="mt-3 space-y-2">
+                    {officeOptions.map((office) => (
+                      <button
+                        key={office}
+                        onClick={() => handleOfficeSelect(office)}
+                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${tempFilters.office === office
+                          ? 'bg-white/20 text-white'
+                          : 'text-gray-300 hover:bg-white/10'
+                          }`}
+                      >
+                        {office}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Filter Content */}
-              <div className="flex-1 overflow-y-auto px-6 py-4">
-                {/* Office location */}
-                <div className="mb-6">
-                  <div
-                    onClick={() => setShowOfficeSelect(!showOfficeSelect)}
-                    className="flex items-center justify-between pb-2 border-b border-white/30 cursor-pointer"
-                  >
-                    <label className="text-white text-sm font-medium">
-                      Office location
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400 text-sm">
-                        {tempFilters.office === 'Any Office' ? 'Select' : tempFilters.office}
-                      </span>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400" />
-                      </svg>
-                    </div>
+              {/* Languages */}
+              <div className="mb-6">
+                <div
+                  onClick={() => setShowLanguageSelect(!showLanguageSelect)}
+                  className="flex items-center justify-between pb-2 border-b border-white/30 cursor-pointer"
+                >
+                  <label className="text-white text-sm font-medium">
+                    Language
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-sm">
+                      {tempFilters.language === 'Any Language' ? 'Select' : tempFilters.language}
+                    </span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400" />
+                    </svg>
                   </div>
-                  {showOfficeSelect && (
-                    <div className="mt-3 space-y-2">
-                      {officeOptions.map((office) => (
-                        <button
-                          key={office}
-                          onClick={() => handleOfficeSelect(office)}
-                          className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${tempFilters.office === office
-                              ? 'bg-white/20 text-white'
-                              : 'text-gray-300 hover:bg-white/10'
-                            }`}
-                        >
-                          {office}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
-
-                {/* Languages */}
-                <div className="mb-6">
-                  <div
-                    onClick={() => setShowLanguageSelect(!showLanguageSelect)}
-                    className="flex items-center justify-between pb-2 border-b border-white/30 cursor-pointer"
-                  >
-                    <label className="text-white text-sm font-medium">
-                      Language
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400 text-sm">
-                        {tempFilters.language === 'Any Language' ? 'Select' : tempFilters.language}
-                      </span>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400" />
-                      </svg>
-                    </div>
+                {showLanguageSelect && (
+                  <div className="mt-3 space-y-2">
+                    {languageOptions.map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => handleLanguageSelect(lang)}
+                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${tempFilters.language === lang
+                          ? 'bg-white/20 text-white'
+                          : 'text-gray-300 hover:bg-white/10'
+                          }`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
                   </div>
-                  {showLanguageSelect && (
-                    <div className="mt-3 space-y-2">
-                      {languageOptions.map((lang) => (
-                        <button
-                          key={lang}
-                          onClick={() => handleLanguageSelect(lang)}
-                          className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${tempFilters.language === lang
-                              ? 'bg-white/20 text-white'
-                              : 'text-gray-300 hover:bg-white/10'
-                            }`}
-                        >
-                          {lang}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Specialties */}
-                <div className="mb-6">
-                  <div
-                    onClick={() => setShowDesignationSelect(!showDesignationSelect)}
-                    className="flex items-center justify-between pb-2 border-b border-white/30 cursor-pointer"
-                  >
-                    <label className="text-white text-sm font-medium">
-                      Specialties
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400 text-sm">
-                        {tempFilters.specialty === 'Any Specialties' ? 'Select' : tempFilters.specialty}
-                      </span>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400" />
-                      </svg>
-                    </div>
-                  </div>
-                  {showDesignationSelect && (
-                    <div className="mt-3 space-y-2">
-                      {specialtyOptions.map((spec) => (
-                        <button
-                          key={spec}
-                          onClick={() => handleDesignationSelect(spec)}
-                          className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${tempFilters.specialty === spec
-                              ? 'bg-white/20 text-white'
-                              : 'text-gray-300 hover:bg-white/10'
-                            }`}
-                        >
-                          {spec}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Group */}
-                <div className="mb-6">
-                  <div
-                    onClick={() => setShowGroupSelect(!showGroupSelect)}
-                    className="flex items-center justify-between pb-2 border-b border-white/30 cursor-pointer"
-                  >
-                    <label className="text-white text-sm font-medium">
-                      Group
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400 text-sm">
-                        {tempFilters.group === 'Any' ? 'Select' : tempFilters.group}
-                      </span>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400" />
-                      </svg>
-                    </div>
-                  </div>
-                  {showGroupSelect && (
-                    <div className="mt-3 space-y-2">
-                      {groupOptions.map((group) => (
-                        <button
-                          key={group}
-                          onClick={() => handleGroupSelect(group)}
-                          className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${tempFilters.group === group
-                              ? 'bg-white/20 text-white'
-                              : 'text-gray-300 hover:bg-white/10'
-                            }`}
-                        >
-                          {group}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
-              {/* Footer */}
-              <div className="flex items-center justify-between px-6 py-4 border-t border-white/20">
-                <button
-                  onClick={handleClearAll}
-                  className="text-white uppercase text-sm font-medium hover:text-gray-300 transition-colors"
+              {/* Specialties */}
+              <div className="mb-6">
+                <div
+                  onClick={() => setShowDesignationSelect(!showDesignationSelect)}
+                  className="flex items-center justify-between pb-2 border-b border-white/30 cursor-pointer"
                 >
-                  CLEAR ALL
-                </button>
-                <button
-                  onClick={handleApplyFilters}
-                  className="px-6 py-2 bg-[#001E3F] border border-amber-600 text-white uppercase text-sm font-medium hover:bg-[#002a5c] transition-colors"
-                >
-                  APPLY
-                </button>
+                  <label className="text-white text-sm font-medium">
+                    Specialties
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-sm">
+                      {tempFilters.specialty === 'Any Specialties' ? 'Select' : tempFilters.specialty}
+                    </span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400" />
+                    </svg>
+                  </div>
+                </div>
+                {showDesignationSelect && (
+                  <div className="mt-3 space-y-2">
+                    {specialtyOptions.map((spec) => (
+                      <button
+                        key={spec}
+                        onClick={() => handleDesignationSelect(spec)}
+                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${tempFilters.specialty === spec
+                          ? 'bg-white/20 text-white'
+                          : 'text-gray-300 hover:bg-white/10'
+                          }`}
+                      >
+                        {spec}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {/* Group */}
+              <div className="mb-6">
+                <div
+                  onClick={() => setShowGroupSelect(!showGroupSelect)}
+                  className="flex items-center justify-between pb-2 border-b border-white/30 cursor-pointer"
+                >
+                  <label className="text-white text-sm font-medium">
+                    Group
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-sm">
+                      {tempFilters.group === 'Any' ? 'Select' : tempFilters.group}
+                    </span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400" />
+                    </svg>
+                  </div>
+                </div>
+                {showGroupSelect && (
+                  <div className="mt-3 space-y-2">
+                    {groupOptions.map((group) => (
+                      <button
+                        key={group}
+                        onClick={() => handleGroupSelect(group)}
+                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${tempFilters.group === group
+                          ? 'bg-white/20 text-white'
+                          : 'text-gray-300 hover:bg-white/10'
+                          }`}
+                      >
+                        {group}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-white/20 bg-[#001E3F]">
+              <button
+                onClick={handleClearAll}
+                className="text-white uppercase text-sm font-medium hover:text-gray-300 transition-colors"
+              >
+                CLEAR ALL
+              </button>
+              <button
+                onClick={handleApplyFilters}
+                className="px-6 py-2 bg-[#001E3F] border border-amber-600 text-white uppercase text-sm font-medium hover:bg-[#002a5c] transition-colors"
+              >
+                APPLY
+              </button>
             </div>
           </div>
         </>
       )}
 
-      {/* Search Input - Optional, can be added below filters if needed */}
-      {filters.agentName && (
-        <div className="flex-shrink-0 px-4 py-2 bg-white border-b border-gray-200">
-          <input
-            type="text"
-            value={filters.agentName}
-            onChange={(e) => setFilters(prev => ({ ...prev, agentName: e.target.value }))}
-            placeholder="Search by name..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#001E3F] focus:border-transparent"
-          />
-        </div>
-      )}
+      {/* Search Input - Always visible */}
+      <div className="flex-shrink-0 px-4 py-2 bg-white border-b border-gray-200">
+        <input
+          type="text"
+          value={filters.agentName}
+          onChange={(e) => setFilters(prev => ({ ...prev, agentName: e.target.value }))}
+          placeholder="Search by name..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#001E3F] focus:bg-white transition-colors"
+        />
+      </div>
 
       {/* Advisors List */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4 scroll-smooth">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <p className="text-gray-500">Loading advisors...</p>
@@ -475,7 +459,7 @@ export default function AdvisorsPage() {
             <p className="text-sm text-gray-400 text-center">Try adjusting your filters</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 pb-20">
             {filteredAdvisors.map((advisor) => (
               <div
                 key={advisor.id}
@@ -505,51 +489,54 @@ export default function AdvisorsPage() {
                   </div>
 
                   {/* Info - Right side */}
-                  <div className="flex-1 min-w-0 p-3 sm:p-4 flex flex-col justify-center relative">
+                  <div className="flex-1 min-w-0 p-3 sm:p-4 flex flex-col justify-between relative">
 
-                    {/* Header Row: Name */}
-                    <div className="flex justify-between items-start mb-1">
-                      <div>
-                        <h3 className="text-base sm:text-lg font-bold text-[#002349] font-serif-luxury line-clamp-1">
-                          {advisor.name}
-                        </h3>
-                        <p className="text-xs text-gray-500 line-clamp-1 font-medium tracking-wide text-gray-400">
-                          {advisor.title}
-                        </p>
-                      </div>
+                    {/* Top: Name & Title (Full Width) */}
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold text-[#002349] font-serif-luxury line-clamp-1">
+                        {advisor.name}
+                      </h3>
+                      <p className="text-xs text-gray-500 line-clamp-1 font-medium tracking-wide">
+                        {advisor.title}
+                      </p>
                     </div>
 
-                    {/* Contact Button (Center Right) */}
-                    <button
-                      className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-1 px-2 py-1 rounded border border-[#B89B5E] text-[#B89B5E] text-[10px] uppercase tracking-wider hover:bg-[#B89B5E] hover:text-white transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowContactModal(true);
-                      }}
-                    >
-                      <Mail className="w-3 h-3" />
-                      <span>Contact</span>
-                    </button>
+                    {/* Bottom: Details & Action */}
+                    <div className="flex items-end justify-between gap-2">
+                      {/* Contact Details */}
+                      <div className="space-y-1.5 min-w-0">
+                        {/* Office */}
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                          <MapPin className="w-3.5 h-3.5 text-[#B89B5E] flex-shrink-0" />
+                          <span className="line-clamp-1">{advisor.office}</span>
+                        </div>
 
-                    <div className="space-y-1.5 mt-2">
-                      {/* Office */}
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                        <MapPin className="w-3.5 h-3.5 text-[#B89B5E] flex-shrink-0" />
-                        <span className="line-clamp-1">{advisor.office}</span>
+                        {/* Phone */}
+                        {advisor.phone && (
+                          <a
+                            href={`tel:${advisor.phone}`}
+                            className="flex items-center gap-1.5 text-xs text-[#002349] hover:underline w-fit"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Phone className="w-3.5 h-3.5 text-[#B89B5E] flex-shrink-0" />
+                            <span>{advisor.phone}</span>
+                          </a>
+                        )}
                       </div>
 
-                      {/* Phone */}
-                      {advisor.phone && (
-                        <a
-                          href={`tel:${advisor.phone}`}
-                          className="flex items-center gap-1.5 text-xs text-[#002349] hover:underline w-fit"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Phone className="w-3.5 h-3.5 text-[#B89B5E] flex-shrink-0" />
-                          <span>{advisor.phone}</span>
-                        </a>
-                      )}
+                      {/* Contact Button (Bottom Right) */}
+                      <button
+                        className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded border border-[#B89B5E] text-[#B89B5E] text-[10px] uppercase tracking-wider hover:bg-[#B89B5E] hover:text-white transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowContactModal(true);
+                        }}
+                      >
+                        <Mail className="w-3 h-3" />
+                        <span>Contact</span>
+                      </button>
                     </div>
+
                   </div>
                 </div>
               </div>

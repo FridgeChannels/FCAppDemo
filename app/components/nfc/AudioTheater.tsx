@@ -24,14 +24,14 @@ export function AudioTheater({
     currentChannel,
     onChannelSelect
 }: AudioTheaterProps) {
-    if (!isVisible) return null;
-
     // Show shimmer if near end (e.g., > 90%)
     const showShimmer = audioProgress > 0.9;
 
     // Category menu state
     const [showCategories, setShowCategories] = useState(false);
     const [showContactModal, setShowContactModal] = useState(false);
+
+    if (!isVisible) return null;
 
     // const categories = ['SOTHEBY\'S', 'Tech News', 'Sport', 'Lifestyle', 'Business', 'Entertainment', 'Science', 'Travel', 'Food'];
 

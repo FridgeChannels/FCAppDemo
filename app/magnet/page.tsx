@@ -13,9 +13,7 @@ export default function MagnetPage() {
     setIsPlaying(!isPlaying);
   };
 
-  const handleScrollDown = () => {
-    window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
-  };
+
 
   const handleFindAdvisor = () => {
     router.push('/advisors');
@@ -36,7 +34,7 @@ export default function MagnetPage() {
         title={title}
         isPlaying={isPlaying}
         onTogglePlay={handleTogglePlay}
-        onScrollDown={handleScrollDown}
+
         benefits={benefits}
         onFindAdvisor={handleFindAdvisor}
       />

@@ -34,22 +34,22 @@ export default function NFCPage() {
 
     // Auto-trigger on mount
     useEffect(() => {
+        const handleTriggerSequence = () => {
+            if (phase !== 'idle') return;
+
+            triggerHaptic();
+            setPhase('triggered');
+
+            // 0ms: Triggered (Ripple)
+            // 300ms: Reveal Logo -> THEN WAIT FOR SWIPE
+            setTimeout(() => setPhase('reveal'), 300);
+        };
+
         const initialDelay = setTimeout(() => {
             handleTriggerSequence();
         }, 500);
         return () => clearTimeout(initialDelay);
-    }, []);
-
-    const handleTriggerSequence = () => {
-        if (phase !== 'idle') return;
-
-        triggerHaptic();
-        setPhase('triggered');
-
-        // 0ms: Triggered (Ripple)
-        // 300ms: Reveal Logo -> THEN WAIT FOR SWIPE
-        setTimeout(() => setPhase('reveal'), 300);
-    };
+    }, [phase]);
 
     const handleSwipeComplete = () => {
         setPhase('presence'); // Transition to Digital Presence

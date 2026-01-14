@@ -1,7 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { Play } from 'lucide-react';
 
 
@@ -9,6 +10,15 @@ interface PresenceCardProps {
     isVisible: boolean;
     onComplete: () => void;
 }
+
+// Stagger Text Config
+const textLines = [
+    "I am James, your dedicated advisor.",
+    "Beyond bespoke property insights,",
+    "I have curated a selection of tranquil channels",
+    "for your quiet moments.",
+    "Welcome to your private frequency."
+];
 
 export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
     const [startExit, setStartExit] = useState(false);
@@ -23,14 +33,12 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
     // Smooth the random jitters so it feels organic, not glitchy
     const smoothScale = useSpring(motionScale, { stiffness: 300, damping: 20 });
 
-    // Stagger Text Config
-    const textLines = [
-        "I am James, your dedicated advisor.",
-        "Beyond bespoke property insights,",
-        "I have curated a selection of tranquil channels",
-        "for your quiet moments.",
-        "Welcome to your private frequency."
-    ];
+    const triggerExit = useCallback(() => {
+        setStartExit(true);
+        setTimeout(() => {
+            onComplete();
+        }, 800);
+    }, [onComplete]);
 
     useEffect(() => {
         if (isVisible) {
@@ -64,7 +72,7 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
                 audio.pause();
             };
         }
-    }, [isVisible]);
+    }, [isVisible, triggerExit]);
 
     const handleStart = async () => {
         if (audioRef.current) {
@@ -102,13 +110,6 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
         return () => clearInterval(interval);
     }, [isPlaying, motionScale]);
 
-    const triggerExit = () => {
-        setStartExit(true);
-        setTimeout(() => {
-            onComplete();
-        }, 800);
-    };
-
     return (
         <AnimatePresence>
             {isVisible && !startExit && (
@@ -144,10 +145,12 @@ export function PresenceCard({ isVisible, onComplete }: PresenceCardProps) {
                         >
                             <div className="w-32 h-32 rounded-full border-[0.5px] border-[#B89B5E] p-1 flex items-center justify-center relative">
                                 <div className="w-full h-full rounded-full bg-stone-800 overflow-hidden relative">
-                                    <img
+                                    <Image
                                         src="https://dl6bglhcfn2kh.cloudfront.net/James-Falconer-c9710917869cf8554ca5bc49f6595242.jpg?version=1749563435"
                                         alt="James Falconer"
-                                        className="w-full h-full object-cover transition-all duration-700"
+                                        fill
+                                        sizes="128px"
+                                        className="object-cover transition-all duration-700"
                                     />
                                 </div>
                             </div>

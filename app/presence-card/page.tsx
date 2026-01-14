@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RippleTrigger } from '../components/nfc/RippleTrigger';
 import { CHANNELS, ChannelData } from '../data/channels';
@@ -26,6 +26,11 @@ export default function NFCPage() {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const phaseRef = useRef(phase);
+
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
   // Simulated Haptic Feedback
   const triggerHaptic = () => {
@@ -34,15 +39,12 @@ export default function NFCPage() {
     }
   };
 
-  // Auto-trigger on mount
-  useEffect(() => {
-    const initialDelay = setTimeout(() => {
-      handleTriggerSequence();
-    }, 500);
-    return () => clearTimeout(initialDelay);
-  }, []);
+  const handleSwipeComplete = () => {
+    setPhase('presence'); // Transition to Digital Presence
+    triggerHaptic();
+  }
 
-  const handleTriggerSequence = () => {
+  const handleTriggerSequence = useCallback(() => {
     if (phase !== 'idle') return;
 
     triggerHaptic();
@@ -51,12 +53,17 @@ export default function NFCPage() {
     // 0ms: Triggered (Ripple)
     // Immediate transition to Presence, skipping Logo/Reveal
     handleSwipeComplete();
-  };
+  }, [phase]);
 
-  const handleSwipeComplete = () => {
-    setPhase('presence'); // Transition to Digital Presence
-    triggerHaptic();
-  }
+  // Auto-trigger on mount
+  useEffect(() => {
+    const initialDelay = setTimeout(() => {
+      handleTriggerSequence();
+    }, 500);
+    return () => clearTimeout(initialDelay);
+  }, [handleTriggerSequence]);
+
+
 
   const handlePresenceComplete = () => {
     // Presence card slides up (handled by component)
@@ -111,7 +118,7 @@ export default function NFCPage() {
     audio.addEventListener('ended', handleEnded);
 
     // If active, try to play immediately (switching channels)
-    if (phase === 'active') {
+    if (phaseRef.current === 'active') {
       audio.play().catch(() => { });
       setIsPlaying(true);
       // Ensure volume is up if we are already active
@@ -123,7 +130,7 @@ export default function NFCPage() {
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
     };
-  }, [currentChannelIndex]); // Re-run when channel changes
+  }, [currentChannel.voice_url]); // Re-run when channel changes
 
   // Initial Volume Fade In (Cross-fade)
   useEffect(() => {

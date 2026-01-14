@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import { Playfair_Display } from "next/font/google";
 import "./globals.css";
+
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair-display",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Fridge Channels",
@@ -21,11 +27,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
       </head>
-      <body data-env="$ENV{NODE_ENV}">{children}</body>
+      <body data-env="$ENV{NODE_ENV}" className={playfairDisplay.variable}>{children}</body>
     </html>
   );
 }

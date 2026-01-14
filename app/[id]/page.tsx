@@ -3,7 +3,7 @@
 // Dynamic Newsletter Page: Article reading view with Notion data
 // Integrated with screen1's TTS, audio player, and subscription features
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 // import { Header } from "@/components/Header";
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -78,6 +78,22 @@ export default function NewsletterPage() {
 
   const currentArticle = articles.length > 0 ? articles[currentIndex] : null;
 
+  // Initial full content load
+  const loadFullContent = useCallback(async (currentData: NewsletterData) => {
+    try {
+      const response = await fetch(`/api/newsletter/${id}?excludePrompts=true`);
+      if (response.ok) {
+        const fullData: NewsletterData = await response.json();
+        // Only update if we still have the same newsletter loaded
+        if (fullData.id === currentData.id) {
+          setNewsletter(prev => ({ ...prev, ...fullData }));
+        }
+      }
+    } catch (e) {
+      console.error("Background fetch failed", e);
+    }
+  }, [id]);
+
   // Fetch newsletter data from API
   useEffect(() => {
     async function loadNewsletter() {
@@ -107,23 +123,7 @@ export default function NewsletterPage() {
     }
 
     loadNewsletter();
-  }, [id]);
-
-  // Initial full content load
-  const loadFullContent = async (currentData: NewsletterData) => {
-    try {
-      const response = await fetch(`/api/newsletter/${id}?excludePrompts=true`);
-      if (response.ok) {
-        const fullData: NewsletterData = await response.json();
-        // Only update if we still have the same newsletter loaded
-        if (fullData.id === currentData.id) {
-          setNewsletter(prev => ({ ...prev, ...fullData }));
-        }
-      }
-    } catch (e) {
-      console.error("Background fetch failed", e);
-    }
-  };
+  }, [id, loadFullContent]);
 
   // Keep currentIndexRef in sync with currentIndex
   useEffect(() => {
@@ -250,7 +250,7 @@ export default function NewsletterPage() {
         }, 200);
       }
     }
-  }, [currentIndex, screenHeight, newsletterTitle]);
+  }, [currentIndex, screenHeight, newsletterTitle, articles]);
 
   const handleViewFullIssue = () => {
     if (isSubscribed) {
@@ -341,8 +341,230 @@ export default function NewsletterPage() {
     };
   };
 
+  // Start Playback (Unified)
+  const startTTSPlayback = useCallback((textSource: string, startTime: number = 0) => {
+    // Mode A: Audio URL
+    if (newsletter?.ttsUrl && audioRef.current) {
+      const audio = audioRef.current;
+      audio.currentTime = startTime;
+      audio.play().then(() => {
+        setIsPlayingTTS(true);
+        setShowPlaybackControls(true);
+      }).catch(err => {
+        console.error("Audio playback error:", err);
+        // If auto-play is blocked, we still show the controls so user can click play
+        if (err.name === 'NotAllowedError') {
+          setIsPlayingTTS(false);
+          setShowPlaybackControls(true);
+        }
+      });
+      return;
+    }
+
+    // Mode B: Web Speech API (Fallback)
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      console.error('Speech synthesis not supported');
+      return;
+    }
+
+    // Stop any existing speech
+    if (synthRef.current) {
+      synthRef.current.cancel();
+    }
+
+    synthRef.current = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(textSource);
+    utterance.lang = 'en-US';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    utterance.onstart = () => {
+      setIsPlayingTTS(true);
+      setShowPlaybackControls(true);
+
+      // Update progress
+      const fullDuration = ttsText.length / 10; // Full text duration estimate
+      const remainingDuration = textSource.length / 10;
+      setTtsDuration(fullDuration);
+
+      const interval = 100; // Update every 100ms
+      let elapsed = startTime;
+
+      progressIntervalRef.current = setInterval(() => {
+        elapsed += interval / 1000;
+        const progress = Math.min((elapsed / fullDuration) * 100, 100);
+        setTtsProgress(progress);
+        setTtsCurrentTime(elapsed);
+      }, interval);
+    };
+
+    utterance.onend = () => {
+      setIsPlayingTTS(false);
+      setTtsProgress(100);
+      setTtsCurrentTime(ttsDuration);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    };
+
+    utterance.onerror = (error) => {
+      console.error('TTS error:', error);
+      setIsPlayingTTS(false);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    };
+
+    utteranceRef.current = utterance;
+    synthRef.current.speak(utterance);
+  }, [newsletter?.ttsUrl, ttsText]);
+
+  // Toggle Playback (Unified)
+  const toggleTTSPlayback = useCallback(() => {
+    // Mode A: Audio URL
+    if (newsletter?.ttsUrl && audioRef.current) {
+      if (isPlayingTTS) {
+        audioRef.current.pause();
+        setIsPlayingTTS(false);
+      } else {
+        audioRef.current.play();
+        setIsPlayingTTS(true);
+        setShowPlaybackControls(true);
+      }
+      return;
+    }
+
+    // Mode B: TTS
+    if (!synthRef.current || !utteranceRef.current) return;
+
+    if (isPlayingTTS) {
+      synthRef.current.pause();
+      setIsPlayingTTS(false);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    } else {
+      synthRef.current.resume();
+      setIsPlayingTTS(true);
+      setShowPlaybackControls(true);
+    }
+  }, [newsletter?.ttsUrl, isPlayingTTS]);
+
+  // Stop Playback (Unified)
+  const stopTTSPlayback = useCallback(() => {
+    // Mode A: Audio URL
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
+    // Mode B: TTS
+    if (synthRef.current) {
+      synthRef.current.cancel();
+    }
+
+    // Common Reset
+    setIsPlayingTTS(false);
+    setTtsProgress(0);
+    setTtsCurrentTime(0);
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+  }, []);
+
+  // Seek forward 15 seconds (Unified)
+  const seekForward15 = useCallback(() => {
+    // Mode A: Audio URL
+    if (newsletter?.ttsUrl && audioRef.current) {
+      audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 15, audioRef.current.duration);
+      return;
+    }
+
+    // Mode B: TTS
+    if (!ttsText || !synthRef.current) return;
+
+    const wasPlaying = isPlayingTTS;
+    const currentTime = ttsCurrentTime;
+    const duration = ttsDuration || (ttsText.length / 10);
+    const newTime = Math.min(currentTime + 15, duration);
+
+    // Calculate new progress
+    const newProgress = (newTime / duration) * 100;
+    setTtsCurrentTime(newTime);
+    setTtsProgress(newProgress);
+
+    // If playing, restart from new position
+    if (wasPlaying && newTime < duration) {
+      // Calculate text position (rough estimate: 10 chars per second)
+      const charsPerSecond = ttsText.length / duration;
+      const startChar = Math.floor(newTime * charsPerSecond);
+      const remainingText = ttsText.substring(startChar);
+
+      // Stop current playback
+      synthRef.current.cancel();
+      setIsPlayingTTS(false);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+
+      // Start from new position
+      setTimeout(() => {
+        startTTSPlayback(remainingText, newTime);
+      }, 100);
+    }
+  }, [newsletter?.ttsUrl, ttsText, isPlayingTTS, ttsCurrentTime, ttsDuration, startTTSPlayback]);
+
+  // Seek backward 15 seconds (Unified)
+  const seekBackward15 = useCallback(() => {
+    // Mode A: Audio URL
+    if (newsletter?.ttsUrl && audioRef.current) {
+      audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 15, 0);
+      return;
+    }
+
+    // Mode B: TTS
+    if (!ttsText || !synthRef.current) return;
+
+    const wasPlaying = isPlayingTTS;
+    const currentTime = ttsCurrentTime;
+    const duration = ttsDuration || (ttsText.length / 10);
+    const newTime = Math.max(currentTime - 15, 0);
+
+    // Calculate new progress
+    const newProgress = (newTime / duration) * 100;
+    setTtsCurrentTime(newTime);
+    setTtsProgress(newProgress);
+
+    // If playing, restart from new position
+    if (wasPlaying && newTime >= 0) {
+      // Calculate text position (rough estimate: 10 chars per second)
+      const charsPerSecond = ttsText.length / duration;
+      const startChar = Math.floor(newTime * charsPerSecond);
+      const remainingText = ttsText.substring(startChar);
+
+      // Stop current playback
+      synthRef.current.cancel();
+      setIsPlayingTTS(false);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+
+      // Start from new position
+      setTimeout(() => {
+        startTTSPlayback(remainingText, newTime);
+      }, 100);
+    }
+  }, [newsletter?.ttsUrl, ttsText, isPlayingTTS, ttsCurrentTime, ttsDuration, startTTSPlayback]);
+
   // Handle newsletter URL submission (can be called programmatically)
-  const handleNewsletterGenerate = async (url: string, articleId?: number) => {
+  const handleNewsletterGenerate = useCallback(async (url: string, articleId?: number) => {
     setIsGeneratingNewsletter(true);
     try {
       const result = await generateNewsletterContent(url);
@@ -375,7 +597,7 @@ export default function NewsletterPage() {
     } finally {
       setIsGeneratingNewsletter(false);
     }
-  };
+  }, [startTTSPlayback]);
 
   // Handle explicit audio unlock tap - iOS Safari requires this
   // audio.play() MUST be called directly and synchronously in the tap handler
@@ -454,7 +676,7 @@ export default function NewsletterPage() {
         setShowPlaybackControls(true);
       }
     }
-  }, [newsletter]);
+  }, [newsletter, startTTSPlayback]);
 
   // Auto-generate summary for the first article on mount
   useEffect(() => {
@@ -486,7 +708,7 @@ export default function NewsletterPage() {
       .finally(() => {
         setIsGeneratingNewsletter(false);
       });
-  }, []);
+  }, [articles, startTTSPlayback]);
 
   // Export function for external use (e.g., from conversation)
   useEffect(() => {
@@ -494,229 +716,9 @@ export default function NewsletterPage() {
     if (typeof window !== 'undefined') {
       (window as any).generateNewsletterAudio = handleNewsletterGenerate;
     }
-  }, []);
+  }, [handleNewsletterGenerate]);
 
-  // Start Playback (Unified)
-  const startTTSPlayback = (textSource: string, startTime: number = 0) => {
-    // Mode A: Audio URL
-    if (newsletter?.ttsUrl && audioRef.current) {
-      const audio = audioRef.current;
-      audio.currentTime = startTime;
-      audio.play().then(() => {
-        setIsPlayingTTS(true);
-        setShowPlaybackControls(true);
-      }).catch(err => {
-        console.error("Audio playback error:", err);
-        // If auto-play is blocked, we still show the controls so user can click play
-        if (err.name === 'NotAllowedError') {
-          setIsPlayingTTS(false);
-          setShowPlaybackControls(true);
-        }
-      });
-      return;
-    }
 
-    // Mode B: Web Speech API (Fallback)
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      console.error('Speech synthesis not supported');
-      return;
-    }
-
-    // Stop any existing speech
-    if (synthRef.current) {
-      synthRef.current.cancel();
-    }
-
-    synthRef.current = window.speechSynthesis;
-    const utterance = new SpeechSynthesisUtterance(textSource);
-    utterance.lang = 'en-US';
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    utterance.onstart = () => {
-      setIsPlayingTTS(true);
-      setShowPlaybackControls(true);
-
-      // Update progress
-      const fullDuration = ttsText.length / 10; // Full text duration estimate
-      const remainingDuration = textSource.length / 10;
-      setTtsDuration(fullDuration);
-
-      const interval = 100; // Update every 100ms
-      let elapsed = startTime;
-
-      progressIntervalRef.current = setInterval(() => {
-        elapsed += interval / 1000;
-        const progress = Math.min((elapsed / fullDuration) * 100, 100);
-        setTtsProgress(progress);
-        setTtsCurrentTime(elapsed);
-      }, interval);
-    };
-
-    utterance.onend = () => {
-      setIsPlayingTTS(false);
-      setTtsProgress(100);
-      setTtsCurrentTime(ttsDuration);
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-    };
-
-    utterance.onerror = (error) => {
-      console.error('TTS error:', error);
-      setIsPlayingTTS(false);
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-    };
-
-    utteranceRef.current = utterance;
-    synthRef.current.speak(utterance);
-  };
-
-  // Toggle Playback (Unified)
-  const toggleTTSPlayback = () => {
-    // Mode A: Audio URL
-    if (newsletter?.ttsUrl && audioRef.current) {
-      if (isPlayingTTS) {
-        audioRef.current.pause();
-        setIsPlayingTTS(false);
-      } else {
-        audioRef.current.play();
-        setIsPlayingTTS(true);
-        setShowPlaybackControls(true);
-      }
-      return;
-    }
-
-    // Mode B: TTS
-    if (!synthRef.current || !utteranceRef.current) return;
-
-    if (isPlayingTTS) {
-      synthRef.current.pause();
-      setIsPlayingTTS(false);
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-    } else {
-      synthRef.current.resume();
-      setIsPlayingTTS(true);
-      setShowPlaybackControls(true);
-    }
-  };
-
-  // Stop Playback (Unified)
-  const stopTTSPlayback = () => {
-    // Mode A: Audio URL
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-
-    // Mode B: TTS
-    if (synthRef.current) {
-      synthRef.current.cancel();
-    }
-
-    // Common Reset
-    setIsPlayingTTS(false);
-    setTtsProgress(0);
-    setTtsCurrentTime(0);
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = null;
-    }
-  };
-
-  // Seek forward 15 seconds (Unified)
-  const seekForward15 = () => {
-    // Mode A: Audio URL
-    if (newsletter?.ttsUrl && audioRef.current) {
-      audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 15, audioRef.current.duration);
-      return;
-    }
-
-    // Mode B: TTS
-    if (!ttsText || !synthRef.current) return;
-
-    const wasPlaying = isPlayingTTS;
-    const currentTime = ttsCurrentTime;
-    const duration = ttsDuration || (ttsText.length / 10);
-    const newTime = Math.min(currentTime + 15, duration);
-
-    // Calculate new progress
-    const newProgress = (newTime / duration) * 100;
-    setTtsCurrentTime(newTime);
-    setTtsProgress(newProgress);
-
-    // If playing, restart from new position
-    if (wasPlaying && newTime < duration) {
-      // Calculate text position (rough estimate: 10 chars per second)
-      const charsPerSecond = ttsText.length / duration;
-      const startChar = Math.floor(newTime * charsPerSecond);
-      const remainingText = ttsText.substring(startChar);
-
-      // Stop current playback
-      synthRef.current.cancel();
-      setIsPlayingTTS(false);
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-
-      // Start from new position
-      setTimeout(() => {
-        startTTSPlayback(remainingText, newTime);
-      }, 100);
-    }
-  };
-
-  // Seek backward 15 seconds (Unified)
-  const seekBackward15 = () => {
-    // Mode A: Audio URL
-    if (newsletter?.ttsUrl && audioRef.current) {
-      audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 15, 0);
-      return;
-    }
-
-    // Mode B: TTS
-    if (!ttsText || !synthRef.current) return;
-
-    const wasPlaying = isPlayingTTS;
-    const currentTime = ttsCurrentTime;
-    const duration = ttsDuration || (ttsText.length / 10);
-    const newTime = Math.max(currentTime - 15, 0);
-
-    // Calculate new progress
-    const newProgress = (newTime / duration) * 100;
-    setTtsCurrentTime(newTime);
-    setTtsProgress(newProgress);
-
-    // If playing, restart from new position
-    if (wasPlaying && newTime >= 0) {
-      // Calculate text position (rough estimate: 10 chars per second)
-      const charsPerSecond = ttsText.length / duration;
-      const startChar = Math.floor(newTime * charsPerSecond);
-      const remainingText = ttsText.substring(startChar);
-
-      // Stop current playback
-      synthRef.current.cancel();
-      setIsPlayingTTS(false);
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-
-      // Start from new position
-      setTimeout(() => {
-        startTTSPlayback(remainingText, newTime);
-      }, 100);
-    }
-  };
 
   // Format time as MM:SS
   const formatTime = (seconds: number): string => {
@@ -736,9 +738,10 @@ export default function NewsletterPage() {
         clearInterval(progressIntervalRef.current);
       }
       // Cleanup Audio
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
+      const audio = audioRef.current;
+      if (audio) {
+        audio.pause();
+        audio.src = "";
       }
     };
   }, []);
@@ -882,7 +885,7 @@ export default function NewsletterPage() {
         wheelDeltaSum = 0;
       };
     }
-  }, []);
+  }, [articles.length]);
 
   // Render loading state (AFTER all hooks)
   if (loading || !newsletter) {

@@ -36,7 +36,7 @@
 }
 
 .font-serif-luxury {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-playfair-display), serif;
 }
 
 html {
@@ -67,26 +67,37 @@ body {
   .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
+
   .pt-safe {
     padding-top: max(1rem, env(safe-area-inset-top));
   }
 }
 
 /* Ensure text doesn't overflow */
-p, h1, h2, h3, h4, h5, h6, span, div {
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+span,
+div {
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
 }
 
 /* Touch-friendly button sizes */
-button, a {
+button,
+a {
   min-height: 44px;
   min-width: 44px;
 }
 
 /* Prevent horizontal scroll */
-html, body {
+html,
+body {
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -96,9 +107,11 @@ html, body {
   0% {
     transform: translateX(0);
   }
+
   50% {
     transform: translateX(calc(-100% + 424px));
   }
+
   100% {
     transform: translateX(0);
   }
@@ -113,28 +126,36 @@ body[data-env="development"] nextjs-portal {
 /* Rich Text Renderer Styles */
 .drop-cap-article {
   font-family: Georgia, serif;
-  color: #1f2937; /* text-gray-800 */
+  color: #1f2937;
+  /* text-gray-800 */
 }
 
 .drop-cap-article p {
-  font-size: 0.875rem; /* text-sm */
-  line-height: 1.625; /* leading-relaxed */
-  margin-bottom: 0.75rem; /* mb-3 */
+  font-size: 0.875rem;
+  /* text-sm */
+  line-height: 1.625;
+  /* leading-relaxed */
+  margin-bottom: 0.75rem;
+  /* mb-3 */
   word-wrap: break-word;
 }
 
 @media (min-width: 640px) {
   .drop-cap-article p {
-    font-size: 1rem; /* sm:text-base */
-    margin-bottom: 1rem; /* sm:mb-4 */
+    font-size: 1rem;
+    /* sm:text-base */
+    margin-bottom: 1rem;
+    /* sm:mb-4 */
   }
 }
 
 /* Drop Cap for the first paragraph */
-.drop-cap-article > p:first-of-type::first-letter {
+.drop-cap-article>p:first-of-type::first-letter {
   float: left;
-  font-family: 'Times New Roman', Times, serif; /* Often drop caps look better in standard serif or specific font */
-  font-size: 3rem; /* text-5xl */
+  font-family: 'Times New Roman', Times, serif;
+  /* Often drop caps look better in standard serif or specific font */
+  font-size: 3rem;
+  /* text-5xl */
   line-height: 0.8;
   margin-right: 0.5rem;
   margin-top: 0.1rem;
@@ -142,14 +163,15 @@ body[data-env="development"] nextjs-portal {
 }
 
 @media (min-width: 640px) {
-  .drop-cap-article > p:first-of-type::first-letter {
-    font-size: 3.75rem; /* text-6xl */
+  .drop-cap-article>p:first-of-type::first-letter {
+    font-size: 3.75rem;
+    /* text-6xl */
   }
 }
 
 /* Headings within the article */
-.drop-cap-article h1, 
-.drop-cap-article h2, 
+.drop-cap-article h1,
+.drop-cap-article h2,
 .drop-cap-article h3 {
   font-family: 'Georgia', serif;
   font-weight: bold;
@@ -159,20 +181,25 @@ body[data-env="development"] nextjs-portal {
 }
 
 .drop-cap-article h2 {
-  font-size: 1.125rem; /* text-lg */
+  font-size: 1.125rem;
+  /* text-lg */
 }
 
 @media (min-width: 640px) {
   .drop-cap-article h2 {
-    font-size: 1.25rem; /* sm:text-xl */
-    margin-top: 1.25rem; /* sm:mt-5 */
-    margin-bottom: 0.75rem; /* sm:mb-3 */
+    font-size: 1.25rem;
+    /* sm:text-xl */
+    margin-top: 1.25rem;
+    /* sm:mt-5 */
+    margin-bottom: 0.75rem;
+    /* sm:mb-3 */
   }
 }
 
 /* Links */
 .drop-cap-article a {
-  color: #2563eb; /* text-blue-600 */
+  color: #2563eb;
+  /* text-blue-600 */
   text-decoration: none;
 }
 
@@ -181,7 +208,7 @@ body[data-env="development"] nextjs-portal {
 }
 
 /* Lists */
-.drop-cap-article ul, 
+.drop-cap-article ul,
 .drop-cap-article ol {
   margin-left: 1rem;
   margin-bottom: 0.75rem;
@@ -209,12 +236,15 @@ body[data-env="development"] nextjs-portal {
 
 /* Hide scrollbar for horizontal filter buttons */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+  display: none;
+  /* Chrome, Safari and Opera */
 }
 
 /* Line clamp utilities */
