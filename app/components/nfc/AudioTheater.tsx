@@ -299,7 +299,7 @@ export function AudioTheater({
                     {/* Contact me Button with Golden Shimmer */}
                     <div className="relative overflow-hidden rounded-full cursor-pointer" onClick={handleContactClick}>
                         <div className="w-48 h-10 rounded-full flex items-center justify-center transition-colors duration-300" style={{ backgroundColor: '#C29B40' }}>
-                            <span className="text-white text-sm font-bold font-serif italic">Contact me</span>
+                            <span className="text-white text-sm font-bold font-serif italic">Text Me</span>
                         </div>
 
                         {/* Golden Shimmer Overlay */}
@@ -347,7 +347,7 @@ export function AudioTheater({
 
                             {/* Message */}
                             <p className="text-white text-base md:text-lg font-medium leading-relaxed px-2">
-                                Thanks for your email. We&apos;ve received it and will reach out shortly.
+                                Thanks for your message — we&apos;ll get back to you shortly.
                             </p>
 
                             {/* Close Button */}
